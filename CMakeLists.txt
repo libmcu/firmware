@@ -7,11 +7,11 @@ if (DEFINED ESP_PLATFORM)
 	set(CMAKE_TOOLCHAIN_FILE $ENV{IDF_PATH}/tools/cmake/toolchain-${DEVICE}.cmake)
 endif()
 
-project(fw-project)
+project(${DEVICE})
 
 set(BASEDIR ${CMAKE_CURRENT_LIST_DIR})
 set(OUTDIR ${BASEDIR}/build)
 
 if (DEFINED ESP_PLATFORM)
-	include(ports/esp-idf/${DEVICE}.mk)
+	include(ports/esp-idf/${DEVICE}.cmake)
 endif()
