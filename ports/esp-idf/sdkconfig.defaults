@@ -1,0 +1,1 @@
+CONFIG_PARTITION_TABLE_FILENAME="ports/esp32/esp-idf/partitions.csv"
