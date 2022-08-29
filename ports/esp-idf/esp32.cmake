@@ -13,7 +13,7 @@ idf_build_process(${DEVICE}
 		freertos
 		esptool_py
 	SDKCONFIG_DEFAULTS
-		${CMAKE_CURRENT_LIST_DIR}/sdkconfig.defaults
+		"${CMAKE_CURRENT_LIST_DIR}/sdkconfig.defaults"
 	BUILD_DIR
 		${CMAKE_CURRENT_BINARY_DIR}
 )
