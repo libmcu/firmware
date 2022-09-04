@@ -29,6 +29,7 @@ add_executable(${elf_file}
 
 target_compile_options(${elf_file} PRIVATE ${compile_options})
 target_link_options(${elf_file} PRIVATE -Wl,--print-memory-usage)
+target_include_directories(${elf_file} PRIVATE ${APP_INCS})
 target_compile_definitions(${elf_file} PRIVATE ${APP_DEFS})
 
 # Link the static libraries to the executable
