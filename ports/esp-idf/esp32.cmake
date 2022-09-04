@@ -42,7 +42,7 @@ target_link_libraries(${elf_file}
 
 set(mapfile "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.map")
 target_link_libraries(${elf_file}
-	"-Wl,--cref" "-Wl,--defsym=IDF_TARGET_ESP32=0"
+	"-Wl,--cref"
 	"-Wl,--Map=\"${mapfile}\""
 )
 
