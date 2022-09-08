@@ -1,7 +1,5 @@
 #include "libmcu/system.h"
-#include "libmcu/cli.h"
-
-#include "cli/cli_commands.h"
+#include "cli/cli.h"
 
 int main(void)
 {

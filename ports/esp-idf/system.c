@@ -1,6 +1,7 @@
 #include "libmcu/system.h"
 #include "esp_system.h"
 #include "esp_mac.h"
+#include "esp_random.h"
 
 const char *system_get_serial_number_string(void)
 {
@@ -56,7 +57,7 @@ unsigned int system_get_heap_watermark(void)
 
 int system_random(void)
 {
-	return 0;
+	return esp_random();
 }
 
 void system_reboot(void)
