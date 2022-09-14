@@ -1,7 +1,9 @@
 #include "libmcu/cli.h"
+
 #if !defined(CONFIG_CONSOLE_SUBSYS) && !defined(CONFIG_CONSOLE_GETCHAR)
 #error CONFIG_CONSOLE_SUBSYS and CONFIG_CONSOLE_GETCHAR should be set
-#else
+#endif
+
 #include <zephyr/console/console.h>
 
 static size_t cli_write(void const *data, size_t datasize)
@@ -33,4 +35,3 @@ struct cli_io const *cli_io_create(void)
 
 	return &io;
 }
-#endif
