@@ -26,7 +26,7 @@ include $(PORT_ROOT)/f403a/$(BOARD).mk
 
 .PHONY: flash erase gdbserver
 flash: $(OUTBIN)
-	dfu-util \
+	$(Q)dfu-util \
 		--device 2e3c:df11 \
 		--alt 0 \
 		--download $< \
@@ -34,7 +34,7 @@ flash: $(OUTBIN)
 		--reset
 
 erase:
-	dfu-util \
+	$(Q)dfu-util \
 		--device 2e3c:df11 \
 		--alt 0 \
 		--dfuse-address 0x08000000:force:mass-erase:leave \
