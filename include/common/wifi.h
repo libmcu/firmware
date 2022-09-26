@@ -65,11 +65,11 @@ enum wifi_mfp {
 };
 
 struct wifi_conf {
-	uint8_t *ssid;
+	const uint8_t *ssid;
 	uint8_t ssid_len;
-	uint8_t *psk;
+	const uint8_t *psk;
 	uint8_t psk_len;
-	uint8_t *sae;
+	const uint8_t *sae;
 	uint8_t sae_len;
 
 	enum wifi_frequency_band band;
@@ -97,7 +97,7 @@ struct wifi_scan_result {
 typedef void (*wifi_event_callback_t)(const wifi_iface_t iface,
 				    enum wifi_event evt, const void *data);
 
-int wifi_connect(wifi_iface_t iface, const struct wifi_conf *conf);
+int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param);
 int wifi_disconnect(wifi_iface_t iface);
 int wifi_scan(wifi_iface_t iface);
 int wifi_get_rssi(wifi_iface_t iface);

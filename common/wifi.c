@@ -33,6 +33,7 @@ static enum wifi_event get_evt_from_state(enum wifi_state state,
 		if (prev == WIFI_STATE_DISABLED) {
 			return WIFI_EVT_STARTED;
 		}
+		/* fall through */
 	default:
 		return WIFI_EVT_UNKNOWN;
 	}
@@ -58,8 +59,8 @@ void wifi_set_state(wifi_iface_t iface, enum wifi_state state)
 	iface->state_prev = iface->state;
 	iface->state = (uint8_t)state;
 
-	raise_event_with_data(iface,
-		       get_evt_from_state(state, iface->state_prev), 0);
+	raise_event_with_data(iface, get_evt_from_state(state,
+					(enum wifi_state)iface->state_prev), 0);
 }
 
 void wifi_set_mode(wifi_iface_t iface, enum wifi_mode mode)
@@ -94,7 +95,7 @@ void wifi_raise_event_with_data(wifi_iface_t iface,
 	raise_event_with_data(iface, evt, data);
 }
 
-LIBMCU_WEAK int wifi_connect(wifi_iface_t iface, const struct wifi_conf *conf)
+LIBMCU_WEAK int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param)
 {
 	if (iface->mode != WIFI_MODE_INFRA) {
 		return -ENOTSUP;
@@ -104,7 +105,7 @@ LIBMCU_WEAK int wifi_connect(wifi_iface_t iface, const struct wifi_conf *conf)
 		return -EISCONN;
 	}
 
-	unused(conf);
+	unused(param);
 
 	return 0;
 }
@@ -134,5 +135,6 @@ LIBMCU_WEAK wifi_iface_t wifi_create(void)
 
 LIBMCU_WEAK int wifi_get_rssi(wifi_iface_t iface)
 {
+	unused(iface);
 	return 0;
 }

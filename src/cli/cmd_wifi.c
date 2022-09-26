@@ -9,9 +9,10 @@
 #include <string.h>
 #include "common/wifi.h"
 #include "libmcu/hexdump.h"
+#include "libmcu/compiler.h"
 
-#if !defined(MIN)
-#define MIN(x, y)			(((x) > (y))? (y) : (x))
+#if !defined(MAX)
+#define MAX(x, y)			(((x) < (y))? (y) : (x))
 #endif
 
 static const struct cli_io *io;
@@ -116,6 +117,8 @@ static void print_scan_result(const struct wifi_scan_result *entry)
 static void event_callback(const wifi_iface_t iface,
 			   enum wifi_event evt, const void *data)
 {
+	unused(iface);
+
 	char buf[16];
 	int len = snprintf(buf, sizeof(buf), "WIFI EVT: %x\r\n", evt);
 
@@ -128,18 +131,22 @@ static void event_callback(const wifi_iface_t iface,
 	case WIFI_EVT_DISCONNECTED:
 	case WIFI_EVT_CONNECTED:
 	default:
-		io->write(buf, MIN((size_t)len, 0));
+		io->write(buf, (size_t)MAX(len, 0));
 		break;
 	}
 }
 
 static void print_wifi_info(const wifi_iface_t iface)
 {
-	const char *str = stringify_mode(iface->mode);
+	if (iface == NULL) {
+		return;
+	}
+
+	const char *str = stringify_mode((enum wifi_mode)iface->mode);
 	size_t len = (size_t)strlen(str);
 	io->write(str, len);
 	io->write("\r\n", 2);
-	str = stringify_state(iface->state);
+	str = stringify_state((enum wifi_state)iface->state);
 	len = (size_t)strlen(str);
 	io->write(str, len);
 	io->write("\r\n", 2);
@@ -165,14 +172,22 @@ cli_cmd_error_t cli_cmd_wifi(int argc, const char *argv[], const void *env)
 		}
 	} else if (argc == 2 && strcmp("disconnect", argv[1]) == 0) {
 		wifi_disconnect(iface);
-	} else if (argc == 4 && strcmp("connect", argv[1]) == 0) {
-		struct wifi_conf conf = {
-			.ssid = (uint8_t *)argv[2],
-			.ssid_len = strlen(argv[2]),
-			.psk = (uint8_t *)argv[3],
-			.psk_len = strlen(argv[3]),
+	} else if (argc == 3 && strcmp("connect", argv[1]) == 0) {
+		struct wifi_conf param = {
+			.ssid = (const uint8_t *)argv[2],
+			.ssid_len = (uint8_t)strlen(argv[2]),
+			.security = WIFI_SEC_TYPE_NONE,
 		};
-		wifi_connect(iface, &conf);
+		wifi_connect(iface, &param);
+	} else if (argc == 4 && strcmp("connect", argv[1]) == 0) {
+		struct wifi_conf param = {
+			.ssid = (const uint8_t *)argv[2],
+			.ssid_len = (uint8_t)strlen(argv[2]),
+			.psk = (const uint8_t *)argv[3],
+			.psk_len = (uint8_t)strlen(argv[3]),
+			.security = WIFI_SEC_TYPE_PSK,
+		};
+		wifi_connect(iface, &param);
 	}
 
 	return CLI_CMD_SUCCESS;

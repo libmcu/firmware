@@ -148,9 +148,9 @@ wifi_iface_t wifi_create(void)
 	return (wifi_iface_t)&esp_iface;
 }
 
-int wifi_connect(wifi_iface_t iface, const struct wifi_conf *conf)
+int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param)
 {
-	wifi_config_t esp_conf = {
+	wifi_config_t conf = {
 		.sta = {
 			.threshold.authmode = WIFI_AUTH_WPA2_PSK,
 			.scan_method = WIFI_ALL_CHANNEL_SCAN,
@@ -169,15 +169,19 @@ int wifi_connect(wifi_iface_t iface, const struct wifi_conf *conf)
 			iface->state != WIFI_STATE_DISCONNECTED) {
 		return -EISCONN;
 	}
-	if (sizeof(esp_conf.sta.ssid) < conf->ssid_len ||
-			sizeof(esp_conf.sta.password) < conf->psk_len) {
+	if (sizeof(conf.sta.ssid) < param->ssid_len ||
+			sizeof(conf.sta.password) < param->psk_len) {
 		return -ERANGE;
 	}
 
-	memcpy(esp_conf.sta.ssid, conf->ssid, conf->ssid_len);
-	memcpy(esp_conf.sta.password, conf->psk, conf->psk_len);
+	memcpy(conf.sta.ssid, param->ssid, param->ssid_len);
+	memcpy(conf.sta.password, param->psk, param->psk_len);
 
-	if (esp_wifi_set_config(WIFI_IF_STA, &esp_conf) != ESP_OK) {
+	if (param->security == WIFI_SEC_TYPE_NONE) {
+		conf.sta.threshold.authmode = WIFI_AUTH_OPEN;
+	}
+
+	if (esp_wifi_set_config(WIFI_IF_STA, &conf) != ESP_OK) {
 		return -EINVAL;
 	}
 
