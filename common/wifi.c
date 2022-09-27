@@ -40,6 +40,7 @@ static enum wifi_event get_evt_from_mode(enum wifi_mode mode)
 	case WIFI_MODE_INFRA:
 	case WIFI_MODE_ACCESS_POINT:
 	case WIFI_MODE_MESH:
+		/* fall through */
 	default:
 		return WIFI_EVT_UNKNOWN;
 	}
@@ -127,8 +128,9 @@ LIBMCU_WEAK wifi_iface_t wifi_create(void)
 	return 0;
 }
 
-LIBMCU_WEAK int wifi_get_rssi(wifi_iface_t iface)
+LIBMCU_WEAK int wifi_get_ap_info(wifi_iface_t iface, struct wifi_ap_info *info)
 {
 	unused(iface);
+	unused(info);
 	return 0;
 }

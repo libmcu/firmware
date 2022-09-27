@@ -19,6 +19,15 @@ struct wifi_iface {
 	volatile uint8_t mode_prev;
 
 	wifi_event_callback_t callbacks;
+
+	uint8_t mac[WIFI_MAC_ADDR_LEN];
+	int8_t rssi;
+	int8_t padding;
+
+	struct {
+		uint8_t v4[4];
+		uint32_t v6[4];
+	} ip;
 };
 
 #if defined(__cplusplus)

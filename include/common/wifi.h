@@ -45,6 +45,7 @@ enum wifi_state {
 };
 
 enum wifi_security {
+	WIFI_SEC_TYPE_UNKNOWN,
 	WIFI_SEC_TYPE_NONE,
 	WIFI_SEC_TYPE_PSK,
 	WIFI_SEC_TYPE_PSK_SHA256,
@@ -93,13 +94,25 @@ struct wifi_scan_result {
 	uint8_t mac_len;
 };
 
+struct wifi_ap_info {
+	uint8_t ssid[WIFI_SSID_MAX_LEN];
+	uint8_t ssid_len;
+
+	uint8_t mac[WIFI_MAC_ADDR_LEN];
+	uint8_t mac_len;
+
+	uint8_t channel;
+	int8_t rssi;
+	enum wifi_security security;
+};
+
 typedef void (*wifi_event_callback_t)(const wifi_iface_t iface,
 				    enum wifi_event evt, const void *data);
 
 int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param);
 int wifi_disconnect(wifi_iface_t iface);
 int wifi_scan(wifi_iface_t iface);
-int wifi_get_rssi(wifi_iface_t iface);
+int wifi_get_ap_info(wifi_iface_t iface, struct wifi_ap_info *info);
 
 wifi_iface_t wifi_create(void);
 int wifi_register_event_callback(wifi_iface_t iface,
@@ -116,8 +129,8 @@ void wifi_set_mode(wifi_iface_t iface, enum wifi_mode mode);
 int wifi_add_event_callback(wifi_iface_t iface,
 			    enum wifi_event evt,
 			    const wifi_event_callback_t cb);
-wifi_activate_ap()
-wifi_deactivate_ap()
+wifi_enable_ap()
+wifi_disable_ap()
 #endif
 
 #include "common/wifi_private.h"

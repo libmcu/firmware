@@ -70,7 +70,7 @@ static void handle_scan_done(void)
 	handle_scan_result();
 }
 
-static void wifi_event_callback(void *arg, esp_event_base_t event_base,
+static void on_wifi_events(void *arg, esp_event_base_t event_base,
 		int32_t event_id, void *event_data)
 {
 	switch (event_id) {
@@ -78,12 +78,13 @@ static void wifi_event_callback(void *arg, esp_event_base_t event_base,
 		wifi_set_state((wifi_iface_t)&esp_iface, WIFI_STATE_INACTIVE);
 		break;
 	case WIFI_EVENT_STA_CONNECTED:
-		/* We raise the connected event when IP acquired rather than
-		 * this moment as DHCP will be started automatically by netif
-		 * registered earlier at initailization. */
+		/* The connection event will be raised when IP acquired as DHCP
+		 * is getting started automatically by netif which is
+		 * registered earlier at the initailization. */
 		break;
 	case WIFI_EVENT_STA_DISCONNECTED:
 		wifi_set_state((wifi_iface_t)&esp_iface, WIFI_STATE_DISCONNECTED);
+		memset(&esp_iface.base.ip, 0, sizeof(esp_iface.base.ip));
 		break;
 	case WIFI_EVENT_SCAN_DONE:
 		handle_scan_done();
@@ -97,12 +98,15 @@ static void wifi_event_callback(void *arg, esp_event_base_t event_base,
 	}
 }
 
-static void ip_event_callback(void *arg, esp_event_base_t event_base,
+static void on_ip_events(void *arg, esp_event_base_t event_base,
 		int32_t event_id, void *event_data)
 {
 	switch (event_id) {
 	case IP_EVENT_STA_GOT_IP:
 		wifi_set_state((wifi_iface_t)&esp_iface, WIFI_STATE_ASSOCIATED);
+		memcpy(&esp_iface.base.ip,
+				&((ip_event_got_ip_t *)event_data)->ip_info.ip,
+				sizeof(esp_iface.base.ip));
 		break;
 	default:
 		break;
@@ -113,12 +117,12 @@ static bool initialize_wifi_event(void)
 {
 	esp_err_t res = esp_event_handler_instance_register(WIFI_EVENT,
 			ESP_EVENT_ANY_ID,
-			&wifi_event_callback,
+			&on_wifi_events,
 			NULL,
 			&esp_iface.wifi_events);
 	res |= esp_event_handler_instance_register(IP_EVENT,
 			ESP_EVENT_ANY_ID,
-			&ip_event_callback,
+			&on_ip_events,
 			NULL,
 			&esp_iface.ip_acquisition_events);
 
@@ -152,6 +156,8 @@ wifi_iface_t wifi_create(void)
 	if (!initialize_wifi_iface()) {
 		return NULL;
 	}
+
+	esp_efuse_mac_get_default(esp_iface.base.mac);
 
 	return (wifi_iface_t)&esp_iface;
 }
@@ -240,9 +246,49 @@ int wifi_scan(wifi_iface_t iface)
 	return 0;
 }
 
-int wifi_get_rssi(wifi_iface_t iface)
+int wifi_get_ap_info(wifi_iface_t iface, struct wifi_ap_info *info)
 {
-	wifi_ap_record_t info;
-	esp_wifi_sta_get_ap_info(&info);
-	return info.rssi;
+	wifi_ap_record_t esp_info;
+
+	if (esp_wifi_sta_get_ap_info(&esp_info) != ESP_OK) {
+		return -EAGAIN;
+	}
+
+	iface->rssi = esp_info.rssi;
+
+	if (info == NULL) {
+		goto out;
+	}
+
+	info->channel = esp_info.primary;
+	info->rssi = esp_info.rssi;
+	info->ssid_len = strnlen(esp_info.ssid, WIFI_SSID_MAX_LEN);
+	memcpy(info->ssid, esp_info.ssid, info->ssid_len);
+	info->mac_len = WIFI_MAC_ADDR_LEN;
+	memcpy(info->mac, esp_info.bssid, info->mac_len);
+
+	enum wifi_security sec = WIFI_SEC_TYPE_UNKNOWN;
+
+	switch (esp_info.authmode) {
+	case WIFI_AUTH_OPEN:
+		sec = WIFI_SEC_TYPE_NONE;
+		break;
+	case WIFI_AUTH_WPA_PSK:
+	case WIFI_AUTH_WPA2_PSK:
+	case WIFI_AUTH_WPA_WPA2_PSK:
+		sec = WIFI_SEC_TYPE_PSK;
+		break;
+	case WIFI_AUTH_WPA3_PSK:
+	case WIFI_AUTH_WPA2_WPA3_PSK:
+	case WIFI_AUTH_WAPI_PSK:
+	case WIFI_AUTH_WPA2_ENTERPRISE:
+		/* fall through */
+	default:
+		break;
+	}
+
+	info->security = sec;
+
+out:
+	return 0;
 }
