@@ -12,7 +12,7 @@ static void raise_event_with_data(wifi_iface_t iface,
 				  enum wifi_event evt, const void *data)
 {
 	if (iface->callbacks) {
-		((wifi_event_callback_t)iface->callbacks)(iface, evt, data);
+		(*iface->callbacks)(iface, evt, data);
 	}
 }
 
@@ -73,7 +73,7 @@ void wifi_set_mode(wifi_iface_t iface, enum wifi_mode mode)
 int wifi_register_event_callback(wifi_iface_t iface,
 				 const wifi_event_callback_t cb)
 {
-	iface->callbacks = (void *)cb;
+	iface->callbacks = cb;
 
 	return 0;
 }

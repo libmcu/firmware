@@ -11,7 +11,6 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "common/wifi_private.h"
 
 #define WIFI_SSID_MAX_LEN		32
 #define WIFI_MAC_ADDR_LEN		6
@@ -120,6 +119,8 @@ int wifi_add_event_callback(wifi_iface_t iface,
 wifi_activate_ap()
 wifi_deactivate_ap()
 #endif
+
+#include "common/wifi_private.h"
 
 #if defined(__cplusplus)
 }
