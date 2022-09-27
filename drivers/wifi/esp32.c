@@ -78,6 +78,9 @@ static void wifi_event_callback(void *arg, esp_event_base_t event_base,
 		wifi_set_state((wifi_iface_t)&esp_iface, WIFI_STATE_INACTIVE);
 		break;
 	case WIFI_EVENT_STA_CONNECTED:
+		/* We raise the connected event when IP acquired rather than
+		 * this moment as DHCP will be started automatically by netif
+		 * registered earlier at initailization. */
 		break;
 	case WIFI_EVENT_STA_DISCONNECTED:
 		wifi_set_state((wifi_iface_t)&esp_iface, WIFI_STATE_DISCONNECTED);
@@ -125,8 +128,13 @@ static bool initialize_wifi_event(void)
 static bool initialize_wifi_iface(void)
 {
 	wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
-	esp_err_t res = esp_wifi_init(&config);
+	esp_err_t res = esp_netif_init();
 
+	if (esp_netif_create_default_wifi_sta() == NULL) {
+		return false;
+	}
+
+	res |= esp_wifi_init(&config);
 	res |= esp_wifi_set_mode(WIFI_MODE_STA);
 	res |= esp_wifi_start();
 
@@ -187,7 +195,8 @@ int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param)
 
 	wifi_set_state(iface, WIFI_STATE_ASSOCIATING);
 
-	if (esp_wifi_connect() != ESP_OK) {
+	if (esp_wifi_set_mode(WIFI_MODE_STA) != ESP_OK ||
+			esp_wifi_connect() != ESP_OK) {
 		return -ENOTCONN;
 	}
 
@@ -199,7 +208,8 @@ int wifi_disconnect(wifi_iface_t iface)
 	if (iface->mode != WIFI_MODE_INFRA) {
 		return -ENOTSUP;
 	}
-	if (iface->state != WIFI_STATE_ASSOCIATED) {
+	if (iface->state != WIFI_STATE_ASSOCIATED &&
+			iface->state != WIFI_STATE_ASSOCIATING) {
 		return -ENOTCONN;
 	}
 
@@ -218,9 +228,10 @@ int wifi_scan(wifi_iface_t iface)
 		return -EINPROGRESS;
 	}
 
-	if (esp_wifi_scan_start(&(wifi_scan_config_t) {
-				 .show_hidden = true,
-			 }, false) != ESP_OK) {
+	if (esp_wifi_set_mode(WIFI_MODE_STA) != ESP_OK ||
+			esp_wifi_scan_start(&(wifi_scan_config_t) {
+						.show_hidden = true,
+					}, false) != ESP_OK) {
 		return -EAGAIN;
 	}
 

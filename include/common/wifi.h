@@ -19,12 +19,12 @@ extern "C" {
 typedef struct wifi_iface * wifi_iface_t;
 
 enum wifi_event {
+	WIFI_EVT_UNKNOWN,
 	WIFI_EVT_CONNECTED,
 	WIFI_EVT_DISCONNECTED,
 	WIFI_EVT_SCAN_RESULT,
 	WIFI_EVT_SCAN_DONE,
 	WIFI_EVT_STARTED,
-	WIFI_EVT_UNKNOWN,
 };
 
 enum wifi_mode {
@@ -34,6 +34,7 @@ enum wifi_mode {
 };
 
 enum wifi_state {
+	WIFI_STATE_UNKNOWN,
 	WIFI_STATE_DISABLED,
 	WIFI_STATE_DISCONNECTING,
 	WIFI_STATE_DISCONNECTED,
@@ -42,7 +43,6 @@ enum wifi_state {
 	WIFI_STATE_AUTHENTICATING,
 	WIFI_STATE_ASSOCIATING,
 	WIFI_STATE_ASSOCIATED,
-	WIFI_STATE_UNKNOWN,
 };
 
 enum wifi_security {

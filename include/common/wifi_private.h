@@ -17,6 +17,8 @@ struct wifi_iface {
 	volatile uint8_t state_prev;
 	volatile uint8_t mode;  /**< @ref wifi_mode */
 	volatile uint8_t mode_prev;
+
+	void *callbacks;
 };
 
 #if defined(__cplusplus)

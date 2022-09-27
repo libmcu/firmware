@@ -8,16 +8,11 @@
 #include <errno.h>
 #include "libmcu/compiler.h"
 
-static struct user_callback {
-	wifi_iface_t iface;
-	wifi_event_callback_t func;
-} user_callback;
-
 static void raise_event_with_data(wifi_iface_t iface,
 				  enum wifi_event evt, const void *data)
 {
-	if (iface == user_callback.iface && user_callback.func) {
-		user_callback.func(iface, evt, data);
+	if (iface->callbacks) {
+		((wifi_event_callback_t)iface->callbacks)(iface, evt, data);
 	}
 }
 
@@ -78,8 +73,7 @@ void wifi_set_mode(wifi_iface_t iface, enum wifi_mode mode)
 int wifi_register_event_callback(wifi_iface_t iface,
 				 const wifi_event_callback_t cb)
 {
-	user_callback.iface = iface;
-	user_callback.func = cb;
+	iface->callbacks = (void *)cb;
 
 	return 0;
 }
