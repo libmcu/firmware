@@ -90,7 +90,8 @@ void wifi_raise_event_with_data(struct wifi_iface *iface,
 	raise_event_with_data(iface, evt, data);
 }
 
-LIBMCU_WEAK int wifi_connect(struct wifi_iface *iface,
+LIBMCU_WEAK
+int wifi_connect(struct wifi_iface *iface,
 			     const struct wifi_conf *param)
 {
 	if (iface->mode != WIFI_MODE_INFRA) {
@@ -106,7 +107,8 @@ LIBMCU_WEAK int wifi_connect(struct wifi_iface *iface,
 	return 0;
 }
 
-LIBMCU_WEAK int wifi_disconnect(struct wifi_iface *iface)
+LIBMCU_WEAK
+int wifi_disconnect(struct wifi_iface *iface)
 {
 	if (iface->mode != WIFI_MODE_INFRA) {
 		return -ENOTSUP;
@@ -118,47 +120,55 @@ LIBMCU_WEAK int wifi_disconnect(struct wifi_iface *iface)
 	return 0;
 }
 
-LIBMCU_WEAK int wifi_scan(struct wifi_iface *iface)
+LIBMCU_WEAK
+int wifi_scan(struct wifi_iface *iface)
 {
 	unused(iface);
 	return 0;
 }
 
-LIBMCU_WEAK int wifi_init(struct wifi_iface *iface)
+LIBMCU_WEAK
+int wifi_init(struct wifi_iface *iface)
 {
 	unused(iface);
 	return 0;
 }
 
-LIBMCU_WEAK int wifi_enable(struct wifi_iface *iface)
+LIBMCU_WEAK
+int wifi_enable(struct wifi_iface *iface)
 {
 	unused(iface);
 	return 0;
 }
 
-LIBMCU_WEAK int wifi_disable(struct wifi_iface *iface)
+LIBMCU_WEAK
+int wifi_disable(struct wifi_iface *iface)
 {
 	unused(iface);
 	return 0;
 }
 
-LIBMCU_WEAK int wifi_deinit(struct wifi_iface *iface)
+LIBMCU_WEAK
+int wifi_deinit(struct wifi_iface *iface)
 {
 	unused(iface);
 	return 0;
 }
 
-LIBMCU_WEAK struct wifi_iface *wifi_create(void)
+LIBMCU_WEAK
+struct wifi_iface *wifi_create(void)
 {
 	return 0;
 }
 
-LIBMCU_WEAK void wifi_delete(struct wifi_iface *iface)
+LIBMCU_WEAK
+void wifi_delete(struct wifi_iface *iface)
 {
 	unused(iface);
 }
 
-LIBMCU_WEAK int wifi_get_ap_info(struct wifi_iface *iface,
+LIBMCU_WEAK
+int wifi_get_ap_info(struct wifi_iface *iface,
 				 struct wifi_ap_info *info)
 {
 	unused(iface);

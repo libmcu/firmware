@@ -41,7 +41,7 @@ static int do_init(struct mqtt_client **mqtt)
 	};
 	struct mqtt_conn_param mqtt_conf = {
 		.client_id = {
-			.value = "hello",
+			.value = (const uint8_t *)"hello",
 			.length = 5,
 		},
 		.keepalive_sec = 60,
@@ -67,12 +67,12 @@ static int do_publish(struct mqtt_client *mqtt,
 {
 	struct mqtt_message msg = {
 		.topic = {
-			.pathname = topic,
+			.pathname = (const uint8_t *)topic,
 			.pathname_len = strlen(topic),
 			.qos = 0,
 		},
 		.payload = {
-			.value = value,
+			.value = (const uint8_t *)value,
 			.length = strlen(value),
 		},
 	};
@@ -83,7 +83,7 @@ static int do_publish(struct mqtt_client *mqtt,
 static int do_subscribe(struct mqtt_client *mqtt, const char *topic)
 {
 	struct mqtt_topic msg = {
-		.pathname = topic,
+		.pathname = (const uint8_t *)topic,
 		.pathname_len = strlen(topic),
 		.qos = 0,
 	};
@@ -94,7 +94,7 @@ static int do_subscribe(struct mqtt_client *mqtt, const char *topic)
 static int do_unsubscribe(struct mqtt_client *mqtt, const char *topic)
 {
 	struct mqtt_topic msg = {
-		.pathname = topic,
+		.pathname = (const uint8_t *)topic,
 		.pathname_len = strlen(topic),
 		.qos = 0,
 	};
@@ -104,6 +104,8 @@ static int do_unsubscribe(struct mqtt_client *mqtt, const char *topic)
 
 static int do_listen(struct mqtt_client *mqtt, const struct cli_io *io)
 {
+	(void)io;
+
 	int rc = 0;
 #if defined(CLI_ASYNC)
 	char ch = 0;
