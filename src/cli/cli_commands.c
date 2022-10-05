@@ -13,6 +13,7 @@ const struct cli_cmd cli_commands[] = {
 	{"reboot", cli_cmd_reboot, "Reboot the device" },
 	{"md", cli_cmd_memdump, "md <addr> <len>" },
 	{"wifi", cli_cmd_wifi, "wifi [scan|connect|disconnect] <ssid> <pass>" },
+	{"test", cli_cmd_test, "test [mqtt]" },
 };
 
 const size_t cli_commands_len = sizeof(cli_commands) / sizeof(*cli_commands);

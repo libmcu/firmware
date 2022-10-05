@@ -5,6 +5,7 @@
  */
 
 #ifndef FPL_WIFI_PRIVATE_H
+#define FPL_WIFI_PRIVATE_H
 
 #if defined(__cplusplus)
 extern "C" {
