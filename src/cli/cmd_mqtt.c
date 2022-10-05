@@ -14,6 +14,12 @@
 #if !defined(MQTT_TEST_ENDPOINT)
 #define MQTT_TEST_ENDPOINT	""
 #endif
+#if !defined(MQTT_TEST_PORT)
+#define MQTT_TEST_PORT		8883
+#endif
+#if !defined(MQTT_TEST_CLIENT_ID)
+#define MQTT_TEST_CLIENT_ID	"hello"
+#endif
 #if !defined(MQTT_TEST_CA)
 #define MQTT_TEST_CA		""
 #endif
@@ -24,6 +30,9 @@
 #define MQTT_TEST_KEY		""
 #endif
 
+#define MQTT_TEST_TIMEOUT_MS	10000
+#define MQTT_TEST_BUF_SIZE	1024
+
 static void on_mqtt_events(struct mqtt_client *ctx, struct mqtt_event *evt)
 {
 	(void)ctx;
@@ -32,28 +41,33 @@ static void on_mqtt_events(struct mqtt_client *ctx, struct mqtt_event *evt)
 
 static int do_init(struct mqtt_client **mqtt)
 {
-	static uint8_t buf[1024];
+	static uint8_t buf[MQTT_TEST_BUF_SIZE];
+	struct mqtt_conn_param mqtt_conf = {
+		.client_id = {
+			.value = (const uint8_t *)MQTT_TEST_CLIENT_ID,
+			.length = sizeof(MQTT_TEST_CLIENT_ID),
+		},
+		.timeout_ms = MQTT_TEST_TIMEOUT_MS,
+		.keepalive_sec = 60,
+		.clean_session = true,
+	};
+
 	struct transport_conn_param transport_conf = {
 		.endpoint = MQTT_TEST_ENDPOINT,
 		.endpoint_len = sizeof(MQTT_TEST_ENDPOINT),
-		.port = 8883,
-		.timeout_ms = 10000,
+		.port = MQTT_TEST_PORT,
+		.timeout_ms = MQTT_TEST_TIMEOUT_MS,
 	};
-	struct mqtt_conn_param mqtt_conf = {
-		.client_id = {
-			.value = (const uint8_t *)"hello",
-			.length = 5,
-		},
-		.keepalive_sec = 60,
-		.timeout_ms = 10000,
-		.clean_session = true,
-	};
-	transport_set_ca_cert(&transport_conf, MQTT_TEST_CA, sizeof(MQTT_TEST_CA));
-	transport_set_client_cert(&transport_conf, MQTT_TEST_CERT, sizeof(MQTT_TEST_CERT));
-	transport_set_client_key(&transport_conf, MQTT_TEST_KEY, sizeof(MQTT_TEST_KEY));
+	transport_set_ca_cert(&transport_conf,
+			MQTT_TEST_CA, sizeof(MQTT_TEST_CA));
+	transport_set_client_cert(&transport_conf,
+			MQTT_TEST_CERT, sizeof(MQTT_TEST_CERT));
+	transport_set_client_key(&transport_conf,
+			MQTT_TEST_KEY, sizeof(MQTT_TEST_KEY));
 	// transport_set_endpoint(v, len, port)
 
 	struct transport_interface *tls = tls_transport_create(&transport_conf);
+
 	*mqtt = mqtt_client_create();
 	mqtt_set_transport(*mqtt, tls);
 	mqtt_set_rx_buffer(*mqtt, buf, sizeof(buf));
