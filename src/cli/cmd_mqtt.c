@@ -30,7 +30,7 @@ static void on_mqtt_events(struct mqtt_client *ctx, struct mqtt_event *evt)
 	(void)evt;
 }
 
-static int test_mqtt_init(struct mqtt_client **mqtt)
+static int do_init(struct mqtt_client **mqtt)
 {
 	static uint8_t buf[1024];
 	struct transport_conn_param transport_conf = {
@@ -62,7 +62,7 @@ static int test_mqtt_init(struct mqtt_client **mqtt)
 	return mqtt_client_init(*mqtt, on_mqtt_events);
 }
 
-static int test_mqtt_publish(struct mqtt_client *mqtt,
+static int do_publish(struct mqtt_client *mqtt,
 		const char *topic, const char *value)
 {
 	struct mqtt_message msg = {
@@ -80,7 +80,7 @@ static int test_mqtt_publish(struct mqtt_client *mqtt,
 	return mqtt_publish(mqtt, &msg, false);
 }
 
-static int test_mqtt_subscribe(struct mqtt_client *mqtt, const char *topic)
+static int do_subscribe(struct mqtt_client *mqtt, const char *topic)
 {
 	struct mqtt_topic msg = {
 		.pathname = topic,
@@ -91,7 +91,7 @@ static int test_mqtt_subscribe(struct mqtt_client *mqtt, const char *topic)
 	return mqtt_subscribe(mqtt, &msg, 1);
 }
 
-static int test_mqtt_unsubscribe(struct mqtt_client *mqtt, const char *topic)
+static int do_unsubscribe(struct mqtt_client *mqtt, const char *topic)
 {
 	struct mqtt_topic msg = {
 		.pathname = topic,
@@ -100,6 +100,28 @@ static int test_mqtt_unsubscribe(struct mqtt_client *mqtt, const char *topic)
 	};
 
 	return mqtt_unsubscribe(mqtt, &msg, 1);
+}
+
+static int do_listen(struct mqtt_client *mqtt, const struct cli_io *io)
+{
+	int rc = 0;
+#if defined(CLI_ASYNC)
+	char ch = 0;
+
+	io->write("type q to quit\r\n", 16);
+#endif
+
+	do {
+		if ((rc = mqtt_step(mqtt))) {
+			break;
+		}
+#if defined(CLI_ASYNC)
+	} while (io->read(&ch, 1) != 1 || ch != 'q');
+#else
+	} while (1);
+#endif
+
+	return rc;
 }
 
 static void process(int argc, const char *argv[], const struct cli_io *io)
@@ -112,7 +134,7 @@ static void process(int argc, const char *argv[], const struct cli_io *io)
 	}
 
 	if (strcmp(argv[1], "init") == 0) {
-		rc = test_mqtt_init(&mqtt);
+		rc = do_init(&mqtt);
 	} else if (strcmp(argv[1], "connect") == 0) {
 		rc = mqtt_connect(mqtt);
 	} else if (strcmp(argv[1], "disconnect") == 0) {
@@ -120,13 +142,13 @@ static void process(int argc, const char *argv[], const struct cli_io *io)
 	} else if (strcmp(argv[1], "step") == 0) {
 		rc = mqtt_step(mqtt);
 	} else if (strcmp(argv[1], "listen") == 0) {
-		while (1) { mqtt_step(mqtt); }
+		rc = do_listen(mqtt, io);
 	} else if (strcmp(argv[1], "publish") == 0 && argc == 4) {
-		rc = test_mqtt_publish(mqtt, argv[2], argv[3]);
+		rc = do_publish(mqtt, argv[2], argv[3]);
 	} else if (strcmp(argv[1], "subscribe") == 0 && argc == 3) {
-		rc = test_mqtt_subscribe(mqtt, argv[2]);
+		rc = do_subscribe(mqtt, argv[2]);
 	} else if (strcmp(argv[1], "unsubscribe") == 0 && argc == 3) {
-		rc = test_mqtt_unsubscribe(mqtt, argv[2]);
+		rc = do_unsubscribe(mqtt, argv[2]);
 	}
 
 	char buf[16];

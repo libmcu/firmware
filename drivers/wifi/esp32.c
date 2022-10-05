@@ -40,8 +40,8 @@ static void handle_scan_result_core(uint16_t n, const wifi_ap_record_t *scanned)
 		res.mac_len = WIFI_MAC_ADDR_LEN;
 		memcpy(res.mac, scanned[i].bssid, res.mac_len);
 
-		wifi_raise_event_with_data((wifi_iface_t)&static_esp_iface,
-				WIFI_EVT_SCAN_RESULT, &res);
+		wifi_raise_event_with_data((struct wifi_iface *)
+			     &static_esp_iface, WIFI_EVT_SCAN_RESULT, &res);
 	}
 }
 
@@ -65,12 +65,13 @@ static void handle_scan_result(void)
 
 	free(scanned);
 out:
-	wifi_raise_event((wifi_iface_t)&static_esp_iface, WIFI_EVT_SCAN_DONE);
+	wifi_raise_event((struct wifi_iface *)&static_esp_iface,
+		  WIFI_EVT_SCAN_DONE);
 }
 
 static void handle_scan_done(void)
 {
-	wifi_set_state((wifi_iface_t)&static_esp_iface,
+	wifi_set_state((struct wifi_iface *)&static_esp_iface,
 			static_esp_iface.base.state_prev);
 	handle_scan_result();
 }
@@ -81,7 +82,7 @@ static void on_wifi_events(void *arg, esp_event_base_t event_base,
 {
 	switch (event_id) {
 	case WIFI_EVENT_STA_START:
-		wifi_set_state((wifi_iface_t)&static_esp_iface,
+		wifi_set_state((struct wifi_iface *)&static_esp_iface,
 				WIFI_STATE_INACTIVE);
 		break;
 	case WIFI_EVENT_STA_CONNECTED:
@@ -90,7 +91,7 @@ static void on_wifi_events(void *arg, esp_event_base_t event_base,
 		 * registered earlier at the initailization. */
 		break;
 	case WIFI_EVENT_STA_DISCONNECTED:
-		wifi_set_state((wifi_iface_t)&static_esp_iface,
+		wifi_set_state((struct wifi_iface *)&static_esp_iface,
 				WIFI_STATE_DISCONNECTED);
 		memset(&static_esp_iface.base.ip, 0,
 				sizeof(static_esp_iface.base.ip));
@@ -112,7 +113,7 @@ static void on_ip_events(void *arg, esp_event_base_t event_base,
 {
 	switch (event_id) {
 	case IP_EVENT_STA_GOT_IP:
-		wifi_set_state((wifi_iface_t)&static_esp_iface,
+		wifi_set_state((struct wifi_iface *)&static_esp_iface,
 				WIFI_STATE_ASSOCIATED);
 		memcpy(&static_esp_iface.base.ip,
 				&((ip_event_got_ip_t *)event_data)->ip_info.ip,
@@ -155,7 +156,7 @@ static bool initialize_wifi_iface(void)
 	return !res;
 }
 
-wifi_iface_t wifi_create(void)
+struct wifi_iface *wifi_create(void)
 {
 	if (static_esp_iface.occupied) {
 		return NULL;
@@ -163,18 +164,19 @@ wifi_iface_t wifi_create(void)
 
 	static_esp_iface.occupied = true;
 
-	return (wifi_iface_t)&static_esp_iface;
+	return (struct wifi_iface *)&static_esp_iface;
 }
 
-void wifi_delete(wifi_iface_t iface)
+void wifi_delete(struct wifi_iface *iface)
 {
 	static_esp_iface.occupied = false;
 }
 
-int wifi_init(wifi_iface_t iface)
+int wifi_init(struct wifi_iface *iface)
 {
-	wifi_set_mode((wifi_iface_t)&static_esp_iface, WIFI_MODE_INFRA);
-	wifi_set_state((wifi_iface_t)&static_esp_iface, WIFI_STATE_DISABLED);
+	wifi_set_mode((struct wifi_iface *)&static_esp_iface, WIFI_MODE_INFRA);
+	wifi_set_state((struct wifi_iface *)&static_esp_iface,
+		WIFI_STATE_DISABLED);
 
 	if (!initialize_wifi_event()) {
 		return -EBUSY;
@@ -188,22 +190,22 @@ int wifi_init(wifi_iface_t iface)
 	return 0;
 }
 
-int wifi_deinit(wifi_iface_t iface)
+int wifi_deinit(struct wifi_iface *iface)
 {
 	return esp_wifi_deinit() == ESP_OK ? 0 : -EBUSY;
 }
 
-int wifi_enable(wifi_iface_t iface)
+int wifi_enable(struct wifi_iface *iface)
 {
 	return esp_wifi_start() == ESP_OK ? 0 : -EAGAIN;
 }
 
-int wifi_disable(wifi_iface_t iface)
+int wifi_disable(struct wifi_iface *iface)
 {
 	return esp_wifi_stop() == ESP_OK ? 0 : -EBUSY;
 }
 
-int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param)
+int wifi_connect(struct wifi_iface *iface, const struct wifi_conf *param)
 {
 	wifi_config_t conf = {
 		.sta = {
@@ -252,7 +254,7 @@ int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param)
 	return 0;
 }
 
-int wifi_disconnect(wifi_iface_t iface)
+int wifi_disconnect(struct wifi_iface *iface)
 {
 	if (iface->mode != WIFI_MODE_INFRA) {
 		return -ENOTSUP;
@@ -271,7 +273,7 @@ int wifi_disconnect(wifi_iface_t iface)
 	return 0;
 }
 
-int wifi_scan(wifi_iface_t iface)
+int wifi_scan(struct wifi_iface *iface)
 {
 	if (iface->state == WIFI_STATE_SCANNING) {
 		return -EINPROGRESS;
@@ -289,7 +291,7 @@ int wifi_scan(wifi_iface_t iface)
 	return 0;
 }
 
-int wifi_get_ap_info(wifi_iface_t iface, struct wifi_ap_info *info)
+int wifi_get_ap_info(struct wifi_iface *iface, struct wifi_ap_info *info)
 {
 	wifi_ap_record_t esp_info;
 

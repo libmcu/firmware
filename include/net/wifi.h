@@ -16,7 +16,18 @@ extern "C" {
 #define WIFI_SSID_MAX_LEN		32
 #define WIFI_MAC_ADDR_LEN		6
 
-typedef struct wifi_iface * wifi_iface_t;
+#if !defined(wifi_init)
+#define wifi_init			fpl_wifi_init
+#endif
+#if !defined(wifi_deinit)
+#define wifi_deinit			fpl_wifi_deinit
+#endif
+#if !defined(wifi_connect)
+#define wifi_connect			fpl_wifi_connect
+#endif
+#if !defined(wifi_disconnect)
+#define wifi_disconnect			fpl_wifi_disconnect
+#endif
 
 enum wifi_event {
 	WIFI_EVT_UNKNOWN,
@@ -66,6 +77,28 @@ enum wifi_mfp {
 	WIFI_MFP_REQUIRED,
 };
 
+struct wifi_iface;
+typedef void (*wifi_event_callback_t)(const struct wifi_iface *iface,
+				    enum wifi_event evt, const void *data);
+
+struct wifi_iface {
+	volatile uint8_t state; /**< @ref wifi_iface_state */
+	volatile uint8_t state_prev;
+	volatile uint8_t mode;  /**< @ref wifi_mode */
+	volatile uint8_t mode_prev;
+
+	wifi_event_callback_t callbacks;
+
+	uint8_t mac[WIFI_MAC_ADDR_LEN];
+	int8_t rssi;
+	int8_t padding;
+
+	struct {
+		uint8_t v4[4];
+		uint32_t v6[4];
+	} ip;
+};
+
 struct wifi_conf {
 	const uint8_t *ssid;
 	uint8_t ssid_len;
@@ -108,42 +141,35 @@ struct wifi_ap_info {
 	enum wifi_security security;
 };
 
-typedef void (*wifi_event_callback_t)(const wifi_iface_t iface,
-				    enum wifi_event evt, const void *data);
+int wifi_connect(struct wifi_iface *iface, const struct wifi_conf *param);
+int wifi_disconnect(struct wifi_iface *iface);
+int wifi_scan(struct wifi_iface *iface);
+int wifi_get_ap_info(struct wifi_iface *iface, struct wifi_ap_info *info);
 
-#define wifi_deinit		fpl_wifi_deinit
+struct wifi_iface *wifi_create(void);
+void wifi_delete(struct wifi_iface *iface);
+int wifi_init(struct wifi_iface *iface);
+int wifi_deinit(struct wifi_iface *iface);
+int wifi_enable(struct wifi_iface *iface);
+int wifi_disable(struct wifi_iface *iface);
 
-int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param);
-int wifi_disconnect(wifi_iface_t iface);
-int wifi_scan(wifi_iface_t iface);
-int wifi_get_ap_info(wifi_iface_t iface, struct wifi_ap_info *info);
-
-wifi_iface_t wifi_create(void);
-void wifi_delete(wifi_iface_t iface);
-int wifi_init(wifi_iface_t iface);
-int wifi_deinit(wifi_iface_t iface);
-int wifi_enable(wifi_iface_t iface);
-int wifi_disable(wifi_iface_t iface);
-
-int wifi_register_event_callback(wifi_iface_t iface,
+int wifi_register_event_callback(struct wifi_iface *iface,
 				 const wifi_event_callback_t cb);
 
-void wifi_raise_event(wifi_iface_t iface, enum wifi_event evt);
-void wifi_raise_event_with_data(wifi_iface_t iface,
+void wifi_raise_event(struct wifi_iface *iface, enum wifi_event evt);
+void wifi_raise_event_with_data(struct wifi_iface *iface,
 				enum wifi_event evt, const void *data);
 
-void wifi_set_state(wifi_iface_t iface, enum wifi_state state);
-void wifi_set_mode(wifi_iface_t iface, enum wifi_mode mode);
+void wifi_set_state(struct wifi_iface *iface, enum wifi_state state);
+void wifi_set_mode(struct wifi_iface *iface, enum wifi_mode mode);
 
 #if 0
-int wifi_add_event_callback(wifi_iface_t iface,
+int wifi_add_event_callback(struct wifi_iface *iface,
 			    enum wifi_event evt,
 			    const wifi_event_callback_t cb);
 wifi_enable_ap()
 wifi_disable_ap()
 #endif
-
-#include "net/wifi_private.h"
 
 #if defined(__cplusplus)
 }

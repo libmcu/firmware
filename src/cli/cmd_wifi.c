@@ -99,8 +99,8 @@ static void print_scan_result(const struct wifi_scan_result *entry)
 
 	if (scan_index == 0) {
 		snprintf(buf, sizeof(buf),
-				"\r\n%-4s | %-32s | %-13s | %-4s | %-10s | %s\r\n",
-				"No.", "SSID", "Chan (Band)", "RSSI", "Security", "BSSID");
+			"\r\n%-4s | %-32s | %-13s | %-4s | %-10s | %s\r\n",
+			"No.", "SSID", "Chan (Band)", "RSSI", "Security", "BSSID");
 		io->write(buf, strlen(buf));
 	}
 
@@ -111,12 +111,12 @@ static void print_scan_result(const struct wifi_scan_result *entry)
 			"%-4d | %.*s%s | %-4u (%-6s) | %-4d | %-10s | %s\r\n",
 			scan_index, entry->ssid_len, entry->ssid,
 			&"                                "[entry->ssid_len],
-			entry->channel, stringify_band(entry->band), entry->rssi,
-			stringify_security(entry->security), mac);
+			entry->channel, stringify_band(entry->band),
+			entry->rssi, stringify_security(entry->security), mac);
 	io->write(buf, strlen(buf));
 }
 
-static void on_wifi_events(const wifi_iface_t iface,
+static void on_wifi_events(const struct wifi_iface *iface,
 			   enum wifi_event evt, const void *data)
 {
 	unused(iface);
@@ -138,7 +138,7 @@ static void on_wifi_events(const wifi_iface_t iface,
 	}
 }
 
-static void print_wifi_info(const wifi_iface_t iface)
+static void print_wifi_info(struct wifi_iface *iface)
 {
 	if (iface == NULL) {
 		return;
@@ -166,7 +166,8 @@ static void print_wifi_info(const wifi_iface_t iface)
 	io->write(buf, (size_t)strlen(buf));
 }
 
-static wifi_iface_t handle_single_param(const char *argv[], wifi_iface_t iface)
+static struct wifi_iface *handle_single_param(const char *argv[],
+				       struct wifi_iface *iface)
 {
 	if (strcmp(argv[1], "init") == 0) {
 		iface = wifi_create();
@@ -187,7 +188,8 @@ static wifi_iface_t handle_single_param(const char *argv[], wifi_iface_t iface)
 	return iface;
 }
 
-static void handle_multi_params(int argc, const char *argv[], wifi_iface_t iface)
+static void handle_multi_params(int argc, const char *argv[],
+				struct wifi_iface *iface)
 {
 	if (strcmp(argv[1], "connect") == 0 && argc >= 3) {
 		struct wifi_conf param = {
@@ -212,7 +214,7 @@ static void handle_multi_params(int argc, const char *argv[], wifi_iface_t iface
 
 cli_cmd_error_t cli_cmd_wifi(int argc, const char *argv[], const void *env)
 {
-	static wifi_iface_t iface;
+	static struct wifi_iface *iface;
 	struct cli const *cli = (struct cli const *)env;
 
 	io = cli->io;
