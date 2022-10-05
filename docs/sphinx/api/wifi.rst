@@ -1,5 +1,5 @@
 WiFi
 ====
 
-.. doxygenfile:: include/common/wifi.h
+.. doxygenfile:: include/net/wifi.h
    :project: fpl

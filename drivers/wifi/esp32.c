@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "common/wifi.h"
+#include "net/wifi.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <string.h>
@@ -16,9 +16,11 @@ struct esp_wifi_iface {
 
 	esp_event_handler_instance_t wifi_events;
 	esp_event_handler_instance_t ip_acquisition_events;
+
+	bool occupied;
 };
 
-static struct esp_wifi_iface esp_iface;
+static struct esp_wifi_iface static_esp_iface;
 
 static void handle_scan_result_core(uint16_t n, const wifi_ap_record_t *scanned)
 {
@@ -38,7 +40,7 @@ static void handle_scan_result_core(uint16_t n, const wifi_ap_record_t *scanned)
 		res.mac_len = WIFI_MAC_ADDR_LEN;
 		memcpy(res.mac, scanned[i].bssid, res.mac_len);
 
-		wifi_raise_event_with_data((wifi_iface_t)&esp_iface,
+		wifi_raise_event_with_data((wifi_iface_t)&static_esp_iface,
 				WIFI_EVT_SCAN_RESULT, &res);
 	}
 }
@@ -63,12 +65,13 @@ static void handle_scan_result(void)
 
 	free(scanned);
 out:
-	wifi_raise_event((wifi_iface_t)&esp_iface, WIFI_EVT_SCAN_DONE);
+	wifi_raise_event((wifi_iface_t)&static_esp_iface, WIFI_EVT_SCAN_DONE);
 }
 
 static void handle_scan_done(void)
 {
-	wifi_set_state((wifi_iface_t)&esp_iface, esp_iface.base.state_prev);
+	wifi_set_state((wifi_iface_t)&static_esp_iface,
+			static_esp_iface.base.state_prev);
 	handle_scan_result();
 }
 
@@ -78,7 +81,8 @@ static void on_wifi_events(void *arg, esp_event_base_t event_base,
 {
 	switch (event_id) {
 	case WIFI_EVENT_STA_START:
-		wifi_set_state((wifi_iface_t)&esp_iface, WIFI_STATE_INACTIVE);
+		wifi_set_state((wifi_iface_t)&static_esp_iface,
+				WIFI_STATE_INACTIVE);
 		break;
 	case WIFI_EVENT_STA_CONNECTED:
 		/* The connection event will be raised when IP acquired as DHCP
@@ -86,8 +90,10 @@ static void on_wifi_events(void *arg, esp_event_base_t event_base,
 		 * registered earlier at the initailization. */
 		break;
 	case WIFI_EVENT_STA_DISCONNECTED:
-		wifi_set_state((wifi_iface_t)&esp_iface, WIFI_STATE_DISCONNECTED);
-		memset(&esp_iface.base.ip, 0, sizeof(esp_iface.base.ip));
+		wifi_set_state((wifi_iface_t)&static_esp_iface,
+				WIFI_STATE_DISCONNECTED);
+		memset(&static_esp_iface.base.ip, 0,
+				sizeof(static_esp_iface.base.ip));
 		break;
 	case WIFI_EVENT_SCAN_DONE:
 		handle_scan_done();
@@ -106,10 +112,11 @@ static void on_ip_events(void *arg, esp_event_base_t event_base,
 {
 	switch (event_id) {
 	case IP_EVENT_STA_GOT_IP:
-		wifi_set_state((wifi_iface_t)&esp_iface, WIFI_STATE_ASSOCIATED);
-		memcpy(&esp_iface.base.ip,
+		wifi_set_state((wifi_iface_t)&static_esp_iface,
+				WIFI_STATE_ASSOCIATED);
+		memcpy(&static_esp_iface.base.ip,
 				&((ip_event_got_ip_t *)event_data)->ip_info.ip,
-				sizeof(esp_iface.base.ip));
+				sizeof(static_esp_iface.base.ip));
 		break;
 	case IP_EVENT_STA_LOST_IP:
 	default:
@@ -123,12 +130,12 @@ static bool initialize_wifi_event(void)
 			ESP_EVENT_ANY_ID,
 			&on_wifi_events,
 			NULL,
-			&esp_iface.wifi_events);
+			&static_esp_iface.wifi_events);
 	res |= esp_event_handler_instance_register(IP_EVENT,
 			ESP_EVENT_ANY_ID,
 			&on_ip_events,
 			NULL,
-			&esp_iface.ip_acquisition_events);
+			&static_esp_iface.ip_acquisition_events);
 
 	return !res;
 }
@@ -144,26 +151,56 @@ static bool initialize_wifi_iface(void)
 
 	res |= esp_wifi_init(&config);
 	res |= esp_wifi_set_mode(WIFI_MODE_STA);
-	res |= esp_wifi_start();
 
 	return !res;
 }
 
 wifi_iface_t wifi_create(void)
 {
-	wifi_set_mode((wifi_iface_t)&esp_iface, WIFI_MODE_INFRA);
-	wifi_set_state((wifi_iface_t)&esp_iface, WIFI_STATE_DISABLED);
+	if (static_esp_iface.occupied) {
+		return NULL;
+	}
+
+	static_esp_iface.occupied = true;
+
+	return (wifi_iface_t)&static_esp_iface;
+}
+
+void wifi_delete(wifi_iface_t iface)
+{
+	static_esp_iface.occupied = false;
+}
+
+int wifi_init(wifi_iface_t iface)
+{
+	wifi_set_mode((wifi_iface_t)&static_esp_iface, WIFI_MODE_INFRA);
+	wifi_set_state((wifi_iface_t)&static_esp_iface, WIFI_STATE_DISABLED);
 
 	if (!initialize_wifi_event()) {
-		return NULL;
+		return -EBUSY;
 	}
 	if (!initialize_wifi_iface()) {
-		return NULL;
+		return -EAGAIN;
 	}
 
-	esp_efuse_mac_get_default(esp_iface.base.mac);
+	esp_efuse_mac_get_default(static_esp_iface.base.mac);
 
-	return (wifi_iface_t)&esp_iface;
+	return 0;
+}
+
+int wifi_deinit(wifi_iface_t iface)
+{
+	return esp_wifi_deinit() == ESP_OK ? 0 : -EBUSY;
+}
+
+int wifi_enable(wifi_iface_t iface)
+{
+	return esp_wifi_start() == ESP_OK ? 0 : -EAGAIN;
+}
+
+int wifi_disable(wifi_iface_t iface)
+{
+	return esp_wifi_stop() == ESP_OK ? 0 : -EBUSY;
 }
 
 int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param)

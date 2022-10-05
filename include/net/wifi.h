@@ -111,12 +111,20 @@ struct wifi_ap_info {
 typedef void (*wifi_event_callback_t)(const wifi_iface_t iface,
 				    enum wifi_event evt, const void *data);
 
+#define wifi_deinit		fpl_wifi_deinit
+
 int wifi_connect(wifi_iface_t iface, const struct wifi_conf *param);
 int wifi_disconnect(wifi_iface_t iface);
 int wifi_scan(wifi_iface_t iface);
 int wifi_get_ap_info(wifi_iface_t iface, struct wifi_ap_info *info);
 
 wifi_iface_t wifi_create(void);
+void wifi_delete(wifi_iface_t iface);
+int wifi_init(wifi_iface_t iface);
+int wifi_deinit(wifi_iface_t iface);
+int wifi_enable(wifi_iface_t iface);
+int wifi_disable(wifi_iface_t iface);
+
 int wifi_register_event_callback(wifi_iface_t iface,
 				 const wifi_event_callback_t cb);
 
@@ -135,7 +143,7 @@ wifi_enable_ap()
 wifi_disable_ap()
 #endif
 
-#include "common/wifi_private.h"
+#include "net/wifi_private.h"
 
 #if defined(__cplusplus)
 }

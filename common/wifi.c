@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "common/wifi.h"
+#include "net/wifi.h"
 #include <errno.h>
 #include "libmcu/compiler.h"
 

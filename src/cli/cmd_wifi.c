@@ -7,7 +7,7 @@
 #include "cli.h"
 #include <stdio.h>
 #include <string.h>
-#include "common/wifi.h"
+#include "net/wifi.h"
 #include "libmcu/hexdump.h"
 #include "libmcu/compiler.h"
 
@@ -166,6 +166,50 @@ static void print_wifi_info(const wifi_iface_t iface)
 	io->write(buf, (size_t)strlen(buf));
 }
 
+static wifi_iface_t handle_single_param(const char *argv[], wifi_iface_t iface)
+{
+	if (strcmp(argv[1], "init") == 0) {
+		iface = wifi_create();
+		wifi_init(iface);
+	} else if (strcmp(argv[1], "enable") == 0) {
+		wifi_enable(iface);
+		wifi_register_event_callback(iface, on_wifi_events);
+	} else if (strcmp(argv[1], "disable") == 0) {
+		wifi_disable(iface);
+	} else if (strcmp(argv[1], "scan") == 0) {
+		if (wifi_scan(iface) == 0) {
+			scan_index = 0;
+		}
+	} else if (strcmp(argv[1], "disconnect") == 0) {
+		wifi_disconnect(iface);
+	}
+
+	return iface;
+}
+
+static void handle_multi_params(int argc, const char *argv[], wifi_iface_t iface)
+{
+	if (strcmp(argv[1], "connect") == 0 && argc >= 3) {
+		struct wifi_conf param = {
+			.ssid = (const uint8_t *)argv[2],
+			.ssid_len = (uint8_t)strlen(argv[2]),
+			.security = WIFI_SEC_TYPE_NONE,
+		};
+
+		if (argc == 4) {
+			param.psk = (const uint8_t *)argv[3];
+			param.psk_len = (uint8_t)strlen(argv[3]);
+			param.security = WIFI_SEC_TYPE_PSK;
+		}
+
+		if (argc == 5 && strcmp(argv[4], "wep") == 0) {
+			param.security = WIFI_SEC_TYPE_WEP;
+		}
+
+		wifi_connect(iface, &param);
+	}
+}
+
 cli_cmd_error_t cli_cmd_wifi(int argc, const char *argv[], const void *env)
 {
 	static wifi_iface_t iface;
@@ -173,33 +217,12 @@ cli_cmd_error_t cli_cmd_wifi(int argc, const char *argv[], const void *env)
 
 	io = cli->io;
 
-	if (argc == 2 && strcmp(argv[1], "init") == 0) {
-		iface = wifi_create();
-		wifi_register_event_callback(iface, on_wifi_events);
-	} else if (argc > 1 && iface) {
-		if (strcmp(argv[1], "scan") == 0) {
-			if (wifi_scan(iface) == 0) {
-				scan_index = 0;
-			}
-		} else if (strcmp(argv[1], "disconnect") == 0) {
-			wifi_disconnect(iface);
-		} else if (strcmp(argv[1], "connect") == 0) {
-			struct wifi_conf param = {
-				.ssid = (const uint8_t *)argv[2],
-				.ssid_len = (uint8_t)strlen(argv[2]),
-				.security = WIFI_SEC_TYPE_NONE,
-			};
-
-			if (argc == 4) {
-				param.psk = (const uint8_t *)argv[3];
-				param.psk_len = (uint8_t)strlen(argv[3]);
-				param.security = WIFI_SEC_TYPE_PSK;
-			}
-
-			wifi_connect(iface, &param);
-		}
-	} else if (argc == 1) { /* info */
+	if (argc == 1) {
 		print_wifi_info(iface);
+	} else if (argc == 2) {
+		iface = handle_single_param(argv, iface);
+	} else if (argc > 1 && iface) {
+		handle_multi_params(argc, argv, iface);
 	}
 
 	return CLI_CMD_SUCCESS;
