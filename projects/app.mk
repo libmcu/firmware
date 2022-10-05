@@ -16,6 +16,7 @@ APP_SRCS = \
 	$(BASEDIR)/src/cli/cmd_memdump.c \
 	$(BASEDIR)/src/cli/cmd_reboot.c \
 	$(BASEDIR)/src/cli/cmd_wifi.c \
+	$(BASEDIR)/src/cli/cmd_test.c \
 	$(LIBMCU_MODULES_SRCS) \
 
 APP_INCS = \

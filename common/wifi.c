@@ -123,9 +123,38 @@ LIBMCU_WEAK int wifi_scan(wifi_iface_t iface)
 	return 0;
 }
 
+LIBMCU_WEAK int wifi_init(wifi_iface_t iface)
+{
+	unused(iface);
+	return 0;
+}
+
+LIBMCU_WEAK int wifi_enable(wifi_iface_t iface)
+{
+	unused(iface);
+	return 0;
+}
+
+LIBMCU_WEAK int wifi_disable(wifi_iface_t iface)
+{
+	unused(iface);
+	return 0;
+}
+
+LIBMCU_WEAK int wifi_deinit(wifi_iface_t iface)
+{
+	unused(iface);
+	return 0;
+}
+
 LIBMCU_WEAK wifi_iface_t wifi_create(void)
 {
 	return 0;
+}
+
+LIBMCU_WEAK void wifi_delete(wifi_iface_t iface)
+{
+	unused(iface);
 }
 
 LIBMCU_WEAK int wifi_get_ap_info(wifi_iface_t iface, struct wifi_ap_info *info)
