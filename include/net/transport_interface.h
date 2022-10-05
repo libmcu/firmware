@@ -13,13 +13,24 @@ extern "C" {
 
 #include <stddef.h>
 
-/* TODO: implement connect, disconnect and make it event-driven */
 struct transport_interface {
+	int (*connect)(struct transport_interface *self);
+	int (*disconnect)(struct transport_interface *self);
 	int (*write)(struct transport_interface *self,
 			const void *data, size_t data_len);
 	int (*read)(struct transport_interface *self,
 			void *buf, size_t bufsize);
 };
+
+static inline int transport_connect(struct transport_interface *self)
+{
+	return self->connect(self);
+}
+
+static inline int transport_disconnect(struct transport_interface *self)
+{
+	return self->disconnect(self);
+}
 
 static inline int transport_write(struct transport_interface *self,
 				  const void *data, size_t data_len)

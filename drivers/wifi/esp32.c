@@ -72,6 +72,7 @@ static void handle_scan_done(void)
 	handle_scan_result();
 }
 
+/* https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/event-handling.html#event-ids-and-corresponding-data-structures */
 static void on_wifi_events(void *arg, esp_event_base_t event_base,
 		int32_t event_id, void *event_data)
 {
@@ -110,6 +111,7 @@ static void on_ip_events(void *arg, esp_event_base_t event_base,
 				&((ip_event_got_ip_t *)event_data)->ip_info.ip,
 				sizeof(esp_iface.base.ip));
 		break;
+	case IP_EVENT_STA_LOST_IP:
 	default:
 		break;
 	}

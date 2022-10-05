@@ -14,20 +14,28 @@ extern "C" {
 #include "net/transport_interface.h"
 #include <stdint.h>
 
-struct transport_conn_params {
+enum transport_event {
+	TRANSPORT_EVT_UNKNOWN,
+	TRANSPORT_EVT_CONNECTED,
+	TRANSPORT_EVT_DISCONNECTED,
+};
+
+struct transport_conn_param {
 	const void *ca_cert;
 	size_t ca_cert_len;
 	const void *client_cert;
 	size_t client_cert_len;
 	const void *client_key;
 	size_t client_key_len;
+
 	const char *endpoint;
 	size_t endpoint_len;
+
 	uint16_t port;
 };
 
 struct transport_interface *tls_transport_create(
-		const struct transport_conn_params *params);
+		const struct transport_conn_param *param);
 void tls_transport_delete(struct transport_interface *instance);
 
 #define transport_set_ca_cert(p_conf, p_ca, l)		\
