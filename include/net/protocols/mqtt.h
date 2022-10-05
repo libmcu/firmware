@@ -29,6 +29,14 @@ enum mqtt_event_type {
 	MQTT_EVT_PINGRESP,
 };
 
+enum mqtt_event_status {
+	MQTT_EVT_STATUS_UNKNOWN,
+	MQTT_EVT_STATUS_SUBACK_QOS0,
+	MQTT_EVT_STATUS_SUBACK_QOS1,
+	MQTT_EVT_STATUS_SUBACK_QOS2,
+	MQTT_EVT_STATUS_SUBACK_FAIL,
+};
+
 struct mqtt_topic {
 	const uint8_t *pathname;
 	size_t pathname_len;
@@ -43,16 +51,9 @@ struct mqtt_vlen {
 struct mqtt_message {
 	struct mqtt_topic topic;
 	struct mqtt_vlen payload;
-	uint16_t id;
 };
 
-struct mqtt_subscription_list {
-	struct mqtt_topic *list;
-	uint16_t count;
-	uint16_t id;
-};
-
-struct mqtt_conn_params {
+struct mqtt_conn_param {
 	struct mqtt_vlen client_id;
 	struct mqtt_vlen *username;
 	struct mqtt_vlen *userpass;
@@ -63,12 +64,13 @@ struct mqtt_conn_params {
 };
 
 struct mqtt_event {
-	struct mqtt_message msg;
+	struct mqtt_message message;
 	enum mqtt_event_type type;
+	enum mqtt_event_status status;
 };
 
 struct mqtt_client {
-	struct mqtt_conn_params conn_params;
+	struct mqtt_conn_param conn_param;
 	void *transport;
 	uint8_t *rx_buf;
 	size_t rx_buf_size;
@@ -87,17 +89,17 @@ int mqtt_disconnect(struct mqtt_client *client);
 int mqtt_publish(struct mqtt_client *client, const struct mqtt_message *msg,
 		 bool retain);
 int mqtt_subscribe(struct mqtt_client *client,
-		const struct mqtt_subscription_list *params);
+		const struct mqtt_topic *topics, uint16_t count);
 int mqtt_unsubscribe(struct mqtt_client *client,
-		const struct mqtt_subscription_list *params);
+		const struct mqtt_topic *topics, uint16_t count);
 int mqtt_step(struct mqtt_client *client);
 
 #define mqtt_set_transport(p_mqtt, p_transport)		\
 		((p_mqtt)->transport = (p_transport))
 #define mqtt_set_rx_buffer(p_mqtt, p_buf, l)		\
 		((p_mqtt)->rx_buf = (p_buf), (p_mqtt)->rx_buf_size = (l))
-#define mqtt_set_conn_params(p_mqtt, p_conf)		\
-		((p_mqtt)->conn_params = *(p_conf))
+#define mqtt_set_conn_param(p_mqtt, p_conf)		\
+		((p_mqtt)->conn_param = *(p_conf))
 
 #if defined(__cplusplus)
 }

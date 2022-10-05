@@ -21,17 +21,18 @@ enum transport_event {
 };
 
 struct transport_conn_param {
+	const char *endpoint;
+	size_t endpoint_len;
+
+	uint16_t port;
+	uint16_t timeout_ms;
+
 	const void *ca_cert;
 	size_t ca_cert_len;
 	const void *client_cert;
 	size_t client_cert_len;
 	const void *client_key;
 	size_t client_key_len;
-
-	const char *endpoint;
-	size_t endpoint_len;
-
-	uint16_t port;
 };
 
 struct transport_interface *tls_transport_create(
