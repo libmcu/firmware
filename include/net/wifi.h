@@ -4,6 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @file wifi.h
+ * @note The APIs should be called in the same context, running by single
+ *	 thread because it doesn't care about race conditions.
+ */
+
 #ifndef FPL_WIFI_H
 #define FPL_WIFI_H
 

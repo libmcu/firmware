@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "core_mqtt.h"
 #include "core_mqtt_state.h"
@@ -16,6 +17,7 @@ static struct core_mqtt_ctx {
 	mqtt_event_callback_t callback;
 	MQTTContext_t core_mqtt;
 	bool active;
+	pthread_mutex_t lock;
 } static_instance;
 
 static int get_errno_from_status(MQTTStatus_t status)
@@ -95,6 +97,8 @@ static uint32_t get_unixtime_ms(void)
 	return xTaskGetTickCount() * 1000 / configTICK_RATE_HZ;
 }
 
+/* Mutual exclusion is guaranteed because an event gets raised by calling
+ * `MQTT_ProcessLoop` which should be already locked. */
 static void on_events(MQTTContext_t *pMqttContext,
 		MQTTPacketInfo_t *pPacketInfo,
 		MQTTDeserializedInfo_t *pDeserializedInfo)
@@ -131,6 +135,7 @@ int mqtt_publish(struct mqtt_client *client, const struct mqtt_message *msg,
 		bool retain)
 {
 	struct core_mqtt_ctx *ctx = (struct core_mqtt_ctx *)client;
+	MQTTStatus_t res;
 
 	MQTTPublishInfo_t data = {
 		.qos = msg->topic.qos,
@@ -141,8 +146,12 @@ int mqtt_publish(struct mqtt_client *client, const struct mqtt_message *msg,
 		.retain = retain,
 	};
 
-	MQTTStatus_t res = MQTT_Publish(&ctx->core_mqtt,
-				&data, MQTT_GetPacketId(&ctx->core_mqtt));
+	pthread_mutex_lock(&ctx->lock);
+	{
+		res = MQTT_Publish(&ctx->core_mqtt, &data,
+				MQTT_GetPacketId(&ctx->core_mqtt));
+	}
+	pthread_mutex_unlock(&ctx->lock);
 
 	return get_errno_from_status(res);
 }
@@ -158,9 +167,14 @@ int mqtt_subscribe(struct mqtt_client *client,
 			.pTopicFilter = topics[i].pathname,
 			.topicFilterLength = topics[i].pathname_len,
 		};
+		MQTTStatus_t res;
 
-		MQTTStatus_t res = MQTT_Subscribe(&ctx->core_mqtt,
-				&topic, 1, MQTT_GetPacketId(&ctx->core_mqtt));
+		pthread_mutex_lock(&ctx->lock);
+		{
+			res = MQTT_Subscribe(&ctx->core_mqtt, &topic, 1,
+					MQTT_GetPacketId(&ctx->core_mqtt));
+		}
+		pthread_mutex_unlock(&ctx->lock);
 
 		if (res != MQTTSuccess) {
 			return get_errno_from_status(res);
@@ -181,9 +195,14 @@ int mqtt_unsubscribe(struct mqtt_client *client,
 			.pTopicFilter = topics[i].pathname,
 			.topicFilterLength = topics[i].pathname_len,
 		};
+		MQTTStatus_t res;
 
-		MQTTStatus_t res = MQTT_Unsubscribe(&ctx->core_mqtt,
-				&topic, 1, MQTT_GetPacketId(&ctx->core_mqtt));
+		pthread_mutex_lock(&ctx->lock);
+		{
+			res = MQTT_Unsubscribe(&ctx->core_mqtt, &topic, 1,
+					MQTT_GetPacketId(&ctx->core_mqtt));
+		}
+		pthread_mutex_unlock(&ctx->lock);
 
 		if (res != MQTTSuccess) {
 			return get_errno_from_status(res);
@@ -195,13 +214,6 @@ int mqtt_unsubscribe(struct mqtt_client *client,
 
 int mqtt_connect(struct mqtt_client *client)
 {
-	struct transport_interface *iface = (struct transport_interface *)
-			client->transport;
-
-	if (transport_connect(iface)) {
-		return -EAGAIN;
-	}
-
 	struct mqtt_message *will = client->conn_param.will;
 	MQTTPublishInfo_t will_msg = { 0, };
 
@@ -223,10 +235,24 @@ int mqtt_connect(struct mqtt_client *client)
 	};
 
 	struct core_mqtt_ctx *ctx = (struct core_mqtt_ctx *)client;
+	struct transport_interface *iface = (struct transport_interface *)
+			ctx->base.transport;
 	bool session_present;
-	MQTTStatus_t res = MQTT_Connect(&ctx->core_mqtt, &conf,
-			will? &will_msg : NULL,
-			client->conn_param.timeout_ms, &session_present);
+	MQTTStatus_t res;
+
+	pthread_mutex_lock(&ctx->lock);
+	{
+		if (transport_connect(iface)) {
+			pthread_mutex_unlock(&ctx->lock);
+			return -EAGAIN;
+		}
+
+		res = MQTT_Connect(&ctx->core_mqtt, &conf,
+				will? &will_msg : NULL,
+				client->conn_param.timeout_ms,
+				&session_present);
+	}
+	pthread_mutex_unlock(&ctx->lock);
 
 	return get_errno_from_status(res);
 }
@@ -236,20 +262,33 @@ int mqtt_disconnect(struct mqtt_client *client)
 	struct core_mqtt_ctx *ctx = (struct core_mqtt_ctx *)client;
 	struct transport_interface *iface = (struct transport_interface *)
 			client->transport;
+	int rc;
 
-	MQTTStatus_t res = MQTT_Disconnect(&ctx->core_mqtt);
+	pthread_mutex_lock(&ctx->lock);
+	{
+		rc = get_errno_from_status(MQTT_Disconnect(&ctx->core_mqtt));
 
-	if (transport_disconnect(iface)) {
-		return -EAGAIN;
+		if (transport_disconnect(iface)) {
+			rc = -EAGAIN;
+		}
 	}
+	pthread_mutex_unlock(&ctx->lock);
 
-	return get_errno_from_status(res);
+	return rc;
 }
 
 int mqtt_step(struct mqtt_client *client)
 {
 	struct core_mqtt_ctx *ctx = (struct core_mqtt_ctx *)client;
-	return get_errno_from_status(MQTT_ProcessLoop(&ctx->core_mqtt));
+	int rc;
+
+	pthread_mutex_lock(&ctx->lock);
+	{
+		rc = get_errno_from_status(MQTT_ProcessLoop(&ctx->core_mqtt));
+	}
+	pthread_mutex_unlock(&ctx->lock);
+
+	return rc;
 }
 
 int mqtt_client_init(struct mqtt_client *client, mqtt_event_callback_t cb)
@@ -272,10 +311,16 @@ int mqtt_client_init(struct mqtt_client *client, mqtt_event_callback_t cb)
 	};
 
 	struct core_mqtt_ctx *ctx = (struct core_mqtt_ctx *)client;
-	ctx->callback = cb;
+	MQTTStatus_t res;
 
-	MQTTStatus_t res = MQTT_Init(&ctx->core_mqtt,
-			&transport, get_unixtime_ms, on_events, &buf);
+	pthread_mutex_lock(&ctx->lock);
+	{
+		ctx->callback = cb;
+
+		res = MQTT_Init(&ctx->core_mqtt,
+				&transport, get_unixtime_ms, on_events, &buf);
+	}
+	pthread_mutex_unlock(&ctx->lock);
 
 	return get_errno_from_status(res);
 }
@@ -286,13 +331,20 @@ struct mqtt_client *mqtt_client_create(void)
 		return NULL;
 	}
 
-	memset(&static_instance, 0, sizeof(static_instance));
 	static_instance.active = true;
+	pthread_mutex_init(&static_instance.lock, NULL);
+	memset(&static_instance, 0, sizeof(static_instance));
 
 	return &static_instance.base;
 }
 
 void mqtt_client_delete(struct mqtt_client *client)
 {
-	static_instance.active = false;
+	struct core_mqtt_ctx *ctx = (struct core_mqtt_ctx *)client;
+
+	pthread_mutex_lock(&ctx->lock);
+	{
+		ctx->active = false;
+	}
+	pthread_mutex_destroy(&ctx->lock);
 }
