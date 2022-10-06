@@ -14,6 +14,8 @@ const struct cli_cmd cli_commands[] = {
 	{"md", cli_cmd_memdump, "md <addr> <len>" },
 	{"wifi", cli_cmd_wifi,
 		"wifi [init|enable|scan|connect|disconnect] <ssid> <pass>" },
+	{"mqtt", cli_cmd_mqtt,
+		"mqtt [init|connect|disconnect|publish|subscribe]" },
 	{"test", cli_cmd_test, "test" },
 };
 
