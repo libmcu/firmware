@@ -198,7 +198,7 @@ static void handle_multi_params(int argc, const char *argv[],
 			.security = WIFI_SEC_TYPE_NONE,
 		};
 
-		if (argc == 4) {
+		if (argc >= 4) {
 			param.psk = (const uint8_t *)argv[3];
 			param.psk_len = (uint8_t)strlen(argv[3]);
 			param.security = WIFI_SEC_TYPE_PSK;
