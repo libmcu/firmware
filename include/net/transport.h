@@ -35,9 +35,27 @@ struct transport_conn_param {
 	size_t client_key_len;
 };
 
-struct transport_interface *tls_transport_create(
-		const struct transport_conn_param *param);
-void tls_transport_delete(struct transport_interface *instance);
+static inline int transport_connect(struct transport_interface *self)
+{
+	return self->connect(self);
+}
+
+static inline int transport_disconnect(struct transport_interface *self)
+{
+	return self->disconnect(self);
+}
+
+static inline int transport_write(struct transport_interface *self,
+				  const void *data, size_t data_len)
+{
+	return self->write(self, data, data_len);
+}
+
+static inline int transport_read(struct transport_interface *self,
+				 void *buf, size_t bufsize)
+{
+	return self->read(self, buf, bufsize);
+}
 
 #define transport_set_ca_cert(p_conf, p_ca, l)		\
 		((p_conf)->ca_cert = (p_ca), (p_conf)->ca_cert_len = (l))
@@ -49,6 +67,10 @@ void tls_transport_delete(struct transport_interface *instance);
 #define transport_set_endpoint(p_conf, p_url, l, p)	\
 		((p_conf)->endpoint = (p_url), (p_conf)->endpoint_len = (l), \
 			(p_conf)->port = (p))
+
+struct transport_interface *tls_transport_create(
+		const struct transport_conn_param *param);
+void tls_transport_delete(struct transport_interface *instance);
 
 #if defined(__cplusplus)
 }

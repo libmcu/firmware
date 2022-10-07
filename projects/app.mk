@@ -6,7 +6,7 @@ LIBMCU_ROOT ?= $(BASEDIR)/external/libmcu
 LIBMCU_MODULES := cli
 include $(LIBMCU_ROOT)/projects/modules.mk
 
-fpl-src-dirs := src common stubs
+fpl-src-dirs := src stubs
 FPL_SRCS = $(foreach dir, $(addprefix $(BASEDIR)/, $(fpl-src-dirs)), \
 	$(shell find $(dir) -type f -regex ".*\.c"))
 

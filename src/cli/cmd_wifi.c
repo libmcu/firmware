@@ -50,44 +50,6 @@ static inline const char *stringify_security(enum wifi_security sec)
 	}
 }
 
-static inline const char *stringify_mode(enum wifi_mode mode)
-{
-	switch (mode) {
-	case WIFI_MODE_INFRA:
-		return "Infra";
-	case WIFI_MODE_ACCESS_POINT:
-		return "AP";
-	case WIFI_MODE_MESH:
-		return "Mesh";
-	default:
-		return "Unknown";
-	}
-}
-
-static inline const char *stringify_state(enum wifi_state state)
-{
-	switch (state) {
-	case WIFI_STATE_DISABLED:
-		return "Disabled";
-	case WIFI_STATE_DISCONNECTING:
-		return "Disconnecting";
-	case WIFI_STATE_DISCONNECTED:
-		return "Disconnected";
-	case WIFI_STATE_INACTIVE:
-		return "Inactive";
-	case WIFI_STATE_SCANNING:
-		return "Scanning";
-	case WIFI_STATE_AUTHENTICATING:
-		return "Authenticating";
-	case WIFI_STATE_ASSOCIATING:
-		return "Associating";
-	case WIFI_STATE_ASSOCIATED:
-		return "Associated";
-	default:
-		return "Unknown";
-	}
-}
-
 static void print_scan_result(const struct wifi_scan_result *entry)
 {
 	if (entry == NULL) {
@@ -116,7 +78,7 @@ static void print_scan_result(const struct wifi_scan_result *entry)
 	io->write(buf, strlen(buf));
 }
 
-static void on_wifi_events(const struct wifi_iface *iface,
+static void on_wifi_events(const struct wifi *iface,
 			   enum wifi_event evt, const void *data)
 {
 	unused(iface);
@@ -138,45 +100,40 @@ static void on_wifi_events(const struct wifi_iface *iface,
 	}
 }
 
-static void print_wifi_info(struct wifi_iface *iface)
+static void print_wifi_info(struct wifi *iface)
 {
+	struct wifi_iface_info info;
+
 	if (iface == NULL) {
 		return;
 	}
 
-	const char *str = stringify_mode((enum wifi_mode)iface->mode);
-	size_t len = (size_t)strlen(str);
-	io->write(str, len);
-	io->write("\r\n", 2);
-	str = stringify_state((enum wifi_state)iface->state);
-	len = (size_t)strlen(str);
-	io->write(str, len);
-	io->write("\r\n", 2);
-
-	wifi_get_ap_info(iface, 0);
+	wifi_get_status(iface, &info);
 	char buf[WIFI_MAC_ADDR_LEN*2+4/*dots*/+2/*crlf*/];
-	hexdump(buf, sizeof(buf), iface->mac, sizeof(iface->mac));
+	hexdump(buf, sizeof(buf), info.mac, sizeof(info.mac));
 	io->write(buf, (size_t)strlen(buf));
 	io->write("\r\n", 2);
 	snprintf(buf, sizeof(buf), "%d.%d.%d.%d\r\n",
 			iface->ip.v4[0], iface->ip.v4[1],
 			iface->ip.v4[2], iface->ip.v4[3]);
 	io->write(buf, (size_t)strlen(buf));
-	snprintf(buf, sizeof(buf), "rssi %d\r\n", iface->rssi);
+	snprintf(buf, sizeof(buf), "rssi %d\r\n", info.rssi);
 	io->write(buf, (size_t)strlen(buf));
 }
 
-static struct wifi_iface *handle_single_param(const char *argv[],
-				       struct wifi_iface *iface)
+static struct wifi *handle_single_param(const char *argv[], struct wifi *iface)
 {
 	if (strcmp(argv[1], "init") == 0) {
-		iface = wifi_create();
-		wifi_init(iface);
-	} else if (strcmp(argv[1], "enable") == 0) {
-		wifi_enable(iface);
+		iface = wifi_create_default();
+	} else if (iface == NULL) {
+		return iface;
+	}
+
+	if (strcmp(argv[1], "start") == 0) {
+		wifi_start(iface);
 		wifi_register_event_callback(iface, on_wifi_events);
-	} else if (strcmp(argv[1], "disable") == 0) {
-		wifi_disable(iface);
+	} else if (strcmp(argv[1], "stop") == 0) {
+		wifi_stop(iface);
 	} else if (strcmp(argv[1], "scan") == 0) {
 		if (wifi_scan(iface) == 0) {
 			scan_index = 0;
@@ -188,11 +145,10 @@ static struct wifi_iface *handle_single_param(const char *argv[],
 	return iface;
 }
 
-static void handle_multi_params(int argc, const char *argv[],
-				struct wifi_iface *iface)
+static void handle_multi_params(int argc, const char *argv[], struct wifi *iface)
 {
 	if (strcmp(argv[1], "connect") == 0 && argc >= 3) {
-		struct wifi_conf param = {
+		struct wifi_conn_param param = {
 			.ssid = (const uint8_t *)argv[2],
 			.ssid_len = (uint8_t)strlen(argv[2]),
 			.security = WIFI_SEC_TYPE_NONE,
@@ -214,12 +170,12 @@ static void handle_multi_params(int argc, const char *argv[],
 
 cli_cmd_error_t cli_cmd_wifi(int argc, const char *argv[], const void *env)
 {
-	static struct wifi_iface *iface;
+	static struct wifi *iface;
 	struct cli const *cli = (struct cli const *)env;
 
 	io = cli->io;
 
-	if (argc == 1) {
+	if (argc == 1 && iface) {
 		print_wifi_info(iface);
 	} else if (argc == 2) {
 		iface = handle_single_param(argv, iface);

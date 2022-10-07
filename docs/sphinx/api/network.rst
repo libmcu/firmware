@@ -17,3 +17,5 @@ WiFi
 ----
 .. doxygenfile:: include/net/wifi.h
    :project: fpl
+.. doxygenfile:: include/net/wifi_interface.h
+   :project: fpl

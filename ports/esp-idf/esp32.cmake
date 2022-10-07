@@ -46,7 +46,7 @@ add_executable(${PROJECT_EXECUTABLE}
 set(mapfile "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.map")
 target_link_options(${PROJECT_EXECUTABLE} PRIVATE -Wl,--print-memory-usage)
 target_compile_options(${PROJECT_EXECUTABLE} PRIVATE ${compile_options})
-target_compile_definitions(${PROJECT_EXECUTABLE} PRIVATE ${APP_DEFS})
+target_compile_definitions(${PROJECT_EXECUTABLE} PRIVATE ${APP_DEFS} WIFI_DEFAULT_INTERFACE=esp)
 target_include_directories(${PROJECT_EXECUTABLE}
 	PRIVATE
 		${APP_INCS}

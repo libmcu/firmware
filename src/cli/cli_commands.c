@@ -13,7 +13,7 @@ const struct cli_cmd cli_commands[] = {
 	{"reboot", cli_cmd_reboot, "Reboot the device" },
 	{"md", cli_cmd_memdump, "md <addr> <len>" },
 	{"wifi", cli_cmd_wifi,
-		"wifi [init|enable|scan|connect|disconnect] <ssid> <pass>" },
+		"wifi [init|start|stop|scan|connect|disconnect] <ssid> <pass>" },
 	{"mqtt", cli_cmd_mqtt,
 		"mqtt [init|connect|disconnect|publish|subscribe]" },
 	{"test", cli_cmd_test, "test" },

@@ -6,7 +6,7 @@ set(LIBMCU_ROOT ${BASEDIR}/external/libmcu)
 list(APPEND LIBMCU_MODULES cli)
 include(${LIBMCU_ROOT}/projects/modules.cmake)
 
-set(fpl-src-dirs src common stubs)
+set(fpl-src-dirs src stubs)
 foreach(dir ${fpl-src-dirs})
 	file(GLOB_RECURSE fpl_${dir}_SRCS RELATIVE ${BASEDIR} ${dir}/*.c)
 	list(APPEND FPL_SRCS ${fpl_${dir}_SRCS})
