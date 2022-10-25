@@ -33,13 +33,23 @@ AT_SRCS = \
 	$(SDK_ROOT)/drivers/src/at32f403a_407_xmc.c \
 	\
 	$(PORT_ROOT)/f403a/board.c \
+	\
+	$(PORT_ROOT)/f403a/usb_cdc.c \
+	external/at32usbd/class/cdc_class.c \
+	external/at32usbd/class/cdc_desc.c \
+	external/at32usbd/driver/src/usbd_core.c \
+	external/at32usbd/driver/src/usbd_int.c \
+	external/at32usbd/driver/src/usbd_sdr.c \
 
 AT_INCS = \
 	$(SDK_ROOT)/cmsis/cm4/core_support \
 	$(SDK_ROOT)/cmsis/cm4/device_support \
 	$(SDK_ROOT)/drivers/inc \
 	\
-	$(PORT_ROOT)/f403a
+	$(PORT_ROOT)/f403a \
+	\
+	external/at32usbd/class \
+	external/at32usbd/driver/inc \
 
 AT_DEFS = \
 	AT32F403ACGU7 \
@@ -49,6 +59,13 @@ AT_DEFS = \
 
 $(addprefix $(OUTDIR)/, $(AT_SRCS:%=%.o)): CFLAGS+=-Wno-error
 
-SRCS += $(AT_SRCS) $(APP_SRCS)
-INCS += $(AT_INCS) $(APP_INCS)
-DEFS += $(AT_DEFS) $(APP_DEFS)
+INCS += $(AT_INCS)
+DEFS += $(AT_DEFS)
+
+AT_OUTPUT := $(OUTDIR)/libat32.a
+AT_OBJS := $(addprefix $(OUTDIR)/, $(AT_SRCS:%=%.o))
+DEPS += $(AT_OBJS:.o=.d)
+LIBS += -Wl,--whole-archive -lat32 -Wl,--no-whole-archive
+
+$(OUTELF):: $(AT_OUTPUT)
+$(eval $(call generate_lib, $(AT_OUTPUT), $(AT_OBJS)))
