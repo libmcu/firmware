@@ -33,13 +33,6 @@ AT_SRCS = \
 	$(SDK_ROOT)/drivers/src/at32f403a_407_xmc.c \
 	\
 	$(PORT_ROOT)/f403a/board.c \
-	\
-	$(PORT_ROOT)/f403a/usb_cdc.c \
-	external/at32usbd/class/cdc_class.c \
-	external/at32usbd/class/cdc_desc.c \
-	external/at32usbd/driver/src/usbd_core.c \
-	external/at32usbd/driver/src/usbd_int.c \
-	external/at32usbd/driver/src/usbd_sdr.c \
 
 AT_INCS = \
 	$(SDK_ROOT)/cmsis/cm4/core_support \
@@ -47,9 +40,6 @@ AT_INCS = \
 	$(SDK_ROOT)/drivers/inc \
 	\
 	$(PORT_ROOT)/f403a \
-	\
-	external/at32usbd/class \
-	external/at32usbd/driver/inc \
 
 AT_DEFS = \
 	AT32F403ACGU7 \
