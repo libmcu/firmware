@@ -57,30 +57,30 @@ enum bq25180_watchdog {
 };
 
 struct bq25180_event {
-	unsigned int battery_overcurrent  : 1;
-	unsigned int battery_undervoltage : 1;
-	unsigned int input_overvoltage    : 1;
-	unsigned int thermal_regulation   : 1;
-	unsigned int vindpm_fault         : 1;
-	unsigned int vdppm_fault          : 1;
-	unsigned int ilim_fault           : 1;
-	unsigned int battery_thermal_fault: 1;
+	uint8_t battery_overcurrent  : 1;
+	uint8_t battery_undervoltage : 1;
+	uint8_t input_overvoltage    : 1;
+	uint8_t thermal_regulation   : 1;
+	uint8_t vindpm_fault         : 1;
+	uint8_t vdppm_fault          : 1;
+	uint8_t ilim_fault           : 1;
+	uint8_t battery_thermal_fault: 1;
 };
 
 struct bq25180_state {
-	unsigned int vin_good                   : 1;
-	unsigned int thermal_regulation_active  : 1;
-	unsigned int vindpm_active              : 1;
-	unsigned int vdppm_active               : 1;
-	unsigned int ilim_active                : 1;
-	unsigned int charging_status            : 2;
-	unsigned int tsmr_open                  : 1;
-	unsigned int wake2_raised               : 1;
-	unsigned int wake1_raised               : 1;
-	unsigned int safety_timer_fault         : 1;
-	unsigned int ts_status                  : 2;
-	unsigned int battery_undervoltage_active: 1;
-	unsigned int vin_overvoltage_active     : 1;
+	uint16_t vin_good                   : 1;
+	uint16_t thermal_regulation_active  : 1;
+	uint16_t vindpm_active              : 1;
+	uint16_t vdppm_active               : 1;
+	uint16_t ilim_active                : 1;
+	uint16_t charging_status            : 2;
+	uint16_t tsmr_open                  : 1;
+	uint16_t wake2_raised               : 1;
+	uint16_t wake1_raised               : 1;
+	uint16_t safety_timer_fault         : 1;
+	uint16_t ts_status                  : 2;
+	uint16_t battery_undervoltage_active: 1;
+	uint16_t vin_overvoltage_active     : 1;
 };
 
 /**

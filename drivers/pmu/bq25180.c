@@ -15,11 +15,11 @@
 #define MIN(a, b)		(((a) > (b))? (b) : (a))
 #endif
 
-#define MIN_BAT_REG_mV		3500
-#define MAX_BAT_REG_mV		4650
+#define MIN_BAT_REG_mV		3500u
+#define MAX_BAT_REG_mV		4650u
 
-#define MIN_IN_CURR_mA		5
-#define MAX_IN_CURR_mA		1000
+#define MIN_IN_CURR_mA		5u
+#define MAX_IN_CURR_mA		1000u
 
 enum registers {
 	STAT0		= 0,	/* Charger Status */
@@ -54,9 +54,9 @@ void bq25180_reset(bool hardware_reset)
 	read_reg(SHIP_RST, &val);
 
 	if (hardware_reset) {
-		val |= 0x60; /* EN_RST_SHIP */
+		val |= 0x60u; /* EN_RST_SHIP */
 	} else {
-		val |= 0x80; /* REG_RST */
+		val |= 0x80u; /* REG_RST */
 	}
 
 	write_reg(SHIP_RST, val);
@@ -74,14 +74,14 @@ bool bq25180_read_event(struct bq25180_event *p)
 
 	memset(p, 0, sizeof(*p));
 
-	p->battery_overcurrent = val & 1; /* BAT_OCP_FAULT */
-	p->battery_undervoltage = (val >> 1) & 1; /* BUVLO_FAULT_FLAG */
-	p->input_overvoltage = (val >> 2) & 1; /* VIN_OVP_FAULT_FLAG */
-	p->thermal_regulation = (val >> 3) & 1; /* THERMREG_ACTIVE_FLAG */
-	p->vindpm_fault = (val >> 4) & 1; /* VINDPM_ACTIVE_FLAG */
-	p->vdppm_fault = (val >> 5) & 1; /* VDPPM_ACTIVE_FLAG */
-	p->ilim_fault = (val >> 6) & 1; /* ILIM_ACTIVE_FLAG */
-	p->battery_thermal_fault = (val >> 7) & 1; /* TS_FAULT */
+	p->battery_overcurrent = val & 1u; /* BAT_OCP_FAULT */
+	p->battery_undervoltage = (val >> 1) & 1u; /* BUVLO_FAULT_FLAG */
+	p->input_overvoltage = (val >> 2) & 1u; /* VIN_OVP_FAULT_FLAG */
+	p->thermal_regulation = (val >> 3) & 1u; /* THERMREG_ACTIVE_FLAG */
+	p->vindpm_fault = (val >> 4) & 1u; /* VINDPM_ACTIVE_FLAG */
+	p->vdppm_fault = (val >> 5) & 1u; /* VDPPM_ACTIVE_FLAG */
+	p->ilim_fault = (val >> 6) & 1u; /* ILIM_ACTIVE_FLAG */
+	p->battery_thermal_fault = (val >> 7) & 1u; /* TS_FAULT */
 
 	return true;
 }
@@ -98,19 +98,19 @@ bool bq25180_read_state(struct bq25180_state *p)
 
 	memset(p, 0, sizeof(*p));
 
-	p->vin_good = val0 & 1; /* VIN_PGOOD_STAT */
-	p->thermal_regulation_active = (val0 >> 1) & 1; /* THERMREG_ACTIVE_STAT */
-	p->vindpm_active = (val0 >> 2) & 1; /* VINDPM_ACTIVE_STAT */
-	p->vdppm_active = (val0 >> 3) & 1; /* VDPPM_ACTIVE_STAT */
-	p->ilim_active = (val0 >> 4) & 1; /* ILIM_ACTIVE_STAT */
-	p->charging_status = (val0 >> 5) & 3; /* CHG_STAT */
-	p->tsmr_open = (val0 >> 7) & 1; /* TS_OPEN_STAT */
-	p->wake2_raised = val1 & 1; /* WAKE2_FLAG */
-	p->wake1_raised = (val1 >> 1) & 1; /* WAKE1_FLAG */
-	p->safety_timer_fault = (val1 >> 2) & 1; /* SAFETY_TMR_FAULT_FLAG */
-	p->ts_status = (val1 >> 3) & 3; /* TS_STAT */
-	p->battery_undervoltage_active = (val1 >> 6) & 1; /* BUVLO_START */
-	p->vin_overvoltage_active = (val1 >> 7) & 1; /* VIN_OVP_STAT */
+	p->vin_good = val0 & 1u; /* VIN_PGOOD_STAT */
+	p->thermal_regulation_active = (val0 >> 1) & 1u; /* THERMREG_ACTIVE_STAT */
+	p->vindpm_active = (val0 >> 2) & 1u; /* VINDPM_ACTIVE_STAT */
+	p->vdppm_active = (val0 >> 3) & 1u; /* VDPPM_ACTIVE_STAT */
+	p->ilim_active = (val0 >> 4) & 1u; /* ILIM_ACTIVE_STAT */
+	p->charging_status = (val0 >> 5) & 3u; /* CHG_STAT */
+	p->tsmr_open = (val0 >> 7) & 1u; /* TS_OPEN_STAT */
+	p->wake2_raised = val1 & 1u; /* WAKE2_FLAG */
+	p->wake1_raised = (val1 >> 1) & 1u; /* WAKE1_FLAG */
+	p->safety_timer_fault = (val1 >> 2) & 1u; /* SAFETY_TMR_FAULT_FLAG */
+	p->ts_status = (val1 >> 3) & 3u; /* TS_STAT */
+	p->battery_undervoltage_active = (val1 >> 6) & 1u; /* BUVLO_START */
+	p->vin_overvoltage_active = (val1 >> 7) & 1u; /* VIN_OVP_STAT */
 
 	return true;
 }
@@ -121,10 +121,10 @@ void bq25180_enable_battery_charging(bool enable)
 
 	read_reg(ICHG_CTRL, &val);
 
-	val &= ~0x80; /* CHG_DIS */
+	val = val & (uint8_t)~0x80u; /* CHG_DIS */
 
 	if (!enable) {
-		val |= 0x80;
+		val = val | (uint8_t)0x80u;
 	}
 
 	write_reg(ICHG_CTRL, val);
@@ -137,8 +137,8 @@ void bq25180_set_safety_timer(enum bq25180_safety_timer opt)
 
 	read_reg(IC_CTRL, &val);
 
-	val &= ~0x0c; /* SAFETY_TIMER */
-	val |= (opt << 2);
+	val = val & (uint8_t)~0x0cu; /* SAFETY_TIMER */
+	val = val | (uint8_t)(opt << 2);
 
 	write_reg(IC_CTRL, val);
 }
@@ -150,8 +150,8 @@ void bq25180_set_watchdog_timer(enum bq25180_watchdog opt)
 
 	read_reg(IC_CTRL, &val);
 
-	val &= ~0x03; /* WATCHDOG_SEL */
-	val |= opt;
+	val = val & (uint8_t)~0x03u; /* WATCHDOG_SEL */
+	val = val | (uint8_t)opt;
 
 	write_reg(IC_CTRL, val);
 }
