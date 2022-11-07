@@ -15,6 +15,8 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
+#define BQ25180_DEVICE_ADDRESS		0x6A /* 7-bit addressing only */
+
 enum bq25180_sys_source {
 	BQ25180_SYS_SRC_VIN_VBAT, /**< Powered from VIN if present or VBAT */
 	BQ25180_SYS_SRC_VBAT, /**< Powered from VBAT only, even if VIN present */
@@ -22,7 +24,7 @@ enum bq25180_sys_source {
 	BQ25180_SYS_SRC_NONE_PULLDOWN, /**< Disconnected with pulldown */
 };
 
-enum bq25180_sys_regulatoin {
+enum bq25180_sys_regulation {
 	BQ25180_SYS_REG_VBAT, /**< VBAT + 225 mV (3.8 V minimum) */
 	BQ25180_SYS_REG_V4_4, /**< 4.4V */
 	BQ25180_SYS_REG_V4_5, /**< 4.5V */
@@ -281,9 +283,9 @@ void bq25180_set_sys_source(enum bq25180_sys_source source);
  *
  * @ref BQ25180_SYS_REG_V4_4 by default on reset.
  *
- * @param[in] val one of @ref bq25180_sys_regulatoin
+ * @param[in] val one of @ref bq25180_sys_regulation
  */
-void bq25180_set_sys_voltage(enum bq25180_sys_regulatoin val);
+void bq25180_set_sys_voltage(enum bq25180_sys_regulation val);
 
 /**
  * @brief Read a register value via I2C
