@@ -43,7 +43,7 @@ jobs:
       - name: Run build-wrapper
         run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} \
-              make BOARD=host
+              make BOARD=native
       - name: Build coverage results
         run: |
           make -C tests install
