@@ -286,3 +286,85 @@ TEST(BQ25180, battery_regulation_ShouldAssertParam_WhenAboveTheRange) {
 	mock().expectOneCall("libmcu_assertion_failed");
 	bq25180_set_battery_regulation_voltage(4650+1);
 }
+
+TEST(BQ25180, battery_discharge_current_ShouldSetOCP) {
+	uint8_t reset_val = 0x56;
+	uint8_t expected = 0x16;
+
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_discharge_current(BQ25180_BAT_DISCHAGE_500mA);
+
+	expected = 0x56;
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_discharge_current(BQ25180_BAT_DISCHAGE_1000mA);
+
+	expected = 0x96;
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_discharge_current(BQ25180_BAT_DISCHAGE_1500mA);
+
+	expected = 0xd6;
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_discharge_current(BQ25180_BAT_DISCHAGE_DISABLE);
+}
+
+TEST(BQ25180, battery_undervoltage_ShouldSetUVLO) {
+	uint8_t reset_val = 0x56;
+	uint8_t expected = 0x7e;
+
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_under_voltage(2000);
+
+	expected = 0x76;
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_under_voltage(2200);
+
+	expected = 0x6e;
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_under_voltage(2400);
+
+	expected = 0x66;
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_under_voltage(2600);
+
+	expected = 0x5e;
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_under_voltage(2800);
+
+	expected = 0x56;
+	expect_reg_read(0x06/*CHARGECTRL1*/, &reset_val);
+	expect_reg_write(0x06, &expected);
+	bq25180_set_battery_under_voltage(3000);
+}
+
+TEST(BQ25180, battery_undervoltage_ShouldAssertParam_WhenAboveTheRange) {
+	mock().expectOneCall("libmcu_assertion_failed");
+	bq25180_set_battery_under_voltage(3000+1);
+}
+
+TEST(BQ25180, battery_undervoltage_ShouldAssertParam_WhenBelowTheRange) {
+	mock().expectOneCall("libmcu_assertion_failed");
+	bq25180_set_battery_under_voltage(2000-1);
+}
+
+TEST(BQ25180, battery_precharge_threshold_ShouldSetVLOWV) {
+	uint8_t reset_val = 0x84;
+	uint8_t expected = 0xc4;
+
+	expect_reg_read(0x07/*IC_CTRL*/, &reset_val);
+	expect_reg_write(0x07, &expected);
+	bq25180_set_precharge_threshold(2800);
+
+	expected = 0x84;
+	expect_reg_read(0x07/*IC_CTRL*/, &reset_val);
+	expect_reg_write(0x07, &expected);
+	bq25180_set_precharge_threshold(3000);
+}

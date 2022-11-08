@@ -167,10 +167,10 @@ void bq25180_set_battery_regulation_voltage(uint16_t millivoltage);
  *
  * @ref BQ25180_BAT_DISCHAGE_500mA by default on reset.
  *
- * @param[in] mA one of @ref bq25180_bat_discharge_current
+ * @param[in] opt one of @ref bq25180_bat_discharge_current
  */
 void bq25180_set_battery_discharge_current(
-		enum bq25180_bat_discharge_current mA);
+		enum bq25180_bat_discharge_current opt);
 
 /**
  * @brief Set battery undervoltage lockout falling threshold
@@ -204,7 +204,8 @@ void bq25180_set_precharge_threshold(uint16_t millivoltage);
 /**
  * @brief Set the precharge current 
  *
- * The precharge current is the same to termination current by default on reset.
+ * The precharge current is the same to the termination current by default on
+ * reset.
  *
  * @param[in] double_termination_current double of termination current if true
  *            or same to the termination current if false
