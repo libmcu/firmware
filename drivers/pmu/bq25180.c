@@ -50,19 +50,25 @@ static bool read_reg(uint8_t reg, uint8_t *p)
 	return bq25180_read(BQ25180_DEVICE_ADDRESS, reg, p, 1) == 1;
 }
 
+static void set_reg(uint8_t reg, uint8_t bit, uint8_t mask, uint8_t val)
+{
+	uint8_t tmp;
+
+	read_reg(reg, &tmp);
+
+	tmp = tmp & (uint8_t)~(mask << bit);
+	tmp = tmp | (uint8_t)(val << bit);
+
+	write_reg(reg, tmp);
+}
+
 void bq25180_reset(bool hardware_reset)
 {
-	uint8_t val;
-
-	read_reg(SHIP_RST, &val);
-
 	if (hardware_reset) {
-		val |= 0x60U; /* EN_RST_SHIP */
+		set_reg(SHIP_RST, 5, 3, 3); /* EN_RST_SHIP */
 	} else {
-		val |= 0x80U; /* REG_RST */
+		set_reg(SHIP_RST, 7, 1, 1); /* REG_RST */
 	}
-
-	write_reg(SHIP_RST, val);
 }
 
 bool bq25180_read_event(struct bq25180_event *p)
@@ -120,43 +126,19 @@ bool bq25180_read_state(struct bq25180_state *p)
 
 void bq25180_enable_battery_charging(bool enable)
 {
-	uint8_t val;
-
-	read_reg(ICHG_CTRL, &val);
-
-	val = val & (uint8_t)~0x80U; /* CHG_DIS */
-
-	if (!enable) {
-		val = val | (uint8_t)0x80U;
-	}
-
-	write_reg(ICHG_CTRL, val);
+	set_reg(ICHG_CTRL, 7, 1, !enable); /* CHG_DIS */
 }
 
 void bq25180_set_safety_timer(enum bq25180_safety_timer opt)
 {
 	/* TODO: support IC_CTRL.2XTMR_EN */
-	uint8_t val;
-
-	read_reg(IC_CTRL, &val);
-
-	val = val & (uint8_t)~0x0cu; /* SAFETY_TIMER */
-	val = val | (uint8_t)(opt << 2);
-
-	write_reg(IC_CTRL, val);
+	set_reg(IC_CTRL, 2, 3, (uint8_t)opt); /* SAFETY_TIMER */
 }
 
 void bq25180_set_watchdog_timer(enum bq25180_watchdog opt)
 {
 	/* TODO: support SYS_REG.WATCHDOG_15S_ENABLE */
-	uint8_t val;
-
-	read_reg(IC_CTRL, &val);
-
-	val = val & (uint8_t)~0x03U; /* WATCHDOG_SEL */
-	val = val | (uint8_t)opt;
-
-	write_reg(IC_CTRL, val);
+	set_reg(IC_CTRL, 0, 3, (uint8_t)opt); /* WATCHDOG_SEL */
 }
 
 void bq25180_set_battery_regulation_voltage(uint16_t millivoltage)
@@ -171,19 +153,12 @@ void bq25180_set_battery_regulation_voltage(uint16_t millivoltage)
 void bq25180_set_battery_discharge_current(
 		enum bq25180_bat_discharge_current opt)
 {
-	uint8_t val;
-
-	read_reg(CHARGECTRL1, &val);
-
-	val = val & (uint8_t)~0xc0U; /* IBAT_OCP */
-	val = val | (uint8_t)(opt << 6);
-
-	write_reg(CHARGECTRL1, val);
+	set_reg(CHARGECTRL1, 6, 3, (uint8_t)opt); /* IBAT_OCP */
 }
 
 void bq25180_set_battery_under_voltage(uint16_t millivoltage)
 {
-	uint8_t val, reg;
+	uint8_t val;
 
 	assert(millivoltage >= MIN_BAT_UNDERVOLTAGE_mV &&
 			millivoltage <= MAX_BAT_UNDERVOLTAGE_mV);
@@ -202,12 +177,7 @@ void bq25180_set_battery_under_voltage(uint16_t millivoltage)
 		val = 7;
 	}
 
-	read_reg(CHARGECTRL1, &reg);
-
-	reg = reg & (uint8_t)~0x38U; /* UVLO */
-	reg = reg | (uint8_t)(val << 3);
-
-	write_reg(CHARGECTRL1, reg);
+	set_reg(CHARGECTRL1, 3, 7, val); /* UVLO */
 }
 
 void bq25180_set_precharge_threshold(uint16_t millivoltage)
@@ -218,35 +188,27 @@ void bq25180_set_precharge_threshold(uint16_t millivoltage)
 		val = 1;
 	}
 
-	uint8_t reg;
-
-	read_reg(IC_CTRL, &reg);
-
-	reg = reg & (uint8_t)~0x40U; /* VLOWV_SEL */
-	reg = reg | (uint8_t)(val << 6);
-
-	write_reg(IC_CTRL, reg);
+	set_reg(IC_CTRL, 6, 1, val); /* VLOWV_SEL */
 }
 
 void bq25180_set_precharge_current(bool double_termination_current)
 {
-	// ICHARGECTRL0.PRECHG
+	set_reg(CHARGECTRL0, 6, 1, !double_termination_current); /* IPRECHG */
 }
 
 void bq25180_set_fastcharge_current(uint16_t milliampere)
 {
-	assert(milliampere >= 5 && milliampere <= MAX_IN_CURR_mA);
+	assert(milliampere >= MIN_IN_CURR_mA && milliampere <= MAX_IN_CURR_mA);
 
-	uint8_t reg = (uint8_t)(milliampere - MIN_IN_CURR_mA);
+	uint8_t val = (uint8_t)(milliampere - MIN_IN_CURR_mA);
 
 	if (milliampere > 35) {
 		/* NOTE: 36mA to 39mA not in the range.
 		 * See the datasheet: Table 8-13. */
-		reg = MIN((uint8_t)(milliampere / 10 + 27), 31);
+		val = MIN((uint8_t)(milliampere / 10 + 27), 127/*1000mA*/);
 	}
 
-	unused(reg);
-	// ICHG_CTRL.ICHG
+	set_reg(ICHG_CTRL, 0, 0x7f, val); /* ICHG */
 }
 
 void bq25180_set_termination_current(uint8_t pct)
@@ -261,21 +223,17 @@ void bq25180_set_termination_current(uint8_t pct)
 		val = 1;
 	}
 
-	unused(val);
-	// ICHG_CTRL.ITERM
+	set_reg(CHARGECTRL0, 4, 3, val); /* ITERM */
 }
 
-void bq25180_enable_vindpm(bool enable)
+void bq25180_enable_vindpm(enum bq25180_vindpm opt)
 {
-	// CHARGECTRL0.VINDPM
+	set_reg(CHARGECTRL0, 2, 3, (uint8_t)opt); /* VINDPM */
 }
 
 void bq25180_enable_dppm(bool enable)
 {
-}
-
-void bq25180_set_vindpm_voltage(uint16_t millivoltage)
-{
+	set_reg(SYS_REG, 0, 1, !enable); /* VDPPM_DIS */
 }
 
 void bq25180_set_input_current(uint16_t milliampere)
@@ -298,16 +256,17 @@ void bq25180_set_input_current(uint16_t milliampere)
 		val = 1;
 	}
 
-	unused(val);
-	// TMR_ILIM.ILIM
+	set_reg(TMR_ILIM, 0, 7, val); /* ILIM */
 }
 
 void bq25180_set_sys_source(enum bq25180_sys_source source)
 {
+	set_reg(SYS_REG, 2, 3, (uint8_t)source); /* SYS_MODE */
 }
 
 void bq25180_set_sys_voltage(enum bq25180_sys_regulation val)
 {
+	set_reg(SYS_REG, 5, 7, (uint8_t)val); /* SYS_REG_CTRL */
 }
 
 LIBMCU_WEAK

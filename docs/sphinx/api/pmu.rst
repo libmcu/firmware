@@ -40,6 +40,9 @@ BQ25180
         'set_tricklecharge_threshold(voltage)
         'set_fastcharge_threshold(voltage)
         'set_tricklecharge_current()
+        enable_button()
+        shipmode()
+        shutdown_mode()
     }
     Controller --> BQ25180
     Controller --> i2c_interface

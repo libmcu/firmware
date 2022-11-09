@@ -56,6 +56,13 @@ enum bq25180_watchdog {
 	BQ25180_WDT_DISABLE, /**< Disable watchdog function */
 };
 
+enum bq25180_vindpm {
+	BQ25180_VINDPM_4200mV,
+	BQ25180_VINDPM_4500mV,
+	BQ25180_VINDPM_4700mV,
+	BQ25180_VINDPM_DISABLE,
+};
+
 struct bq25180_event {
 	uint8_t battery_overcurrent  : 1;
 	uint8_t battery_undervoltage : 1;
@@ -231,13 +238,16 @@ void bq25180_set_fastcharge_current(uint16_t milliampere);
 void bq25180_set_termination_current(uint8_t pct);
 
 /**
- * @brief Enable of disable Input Voltage Based Dynamic Power Management
+ * @brief Enable or disable Input Voltage Based Dynamic Power Management
  *
- * This feature is enabled by default on reset.
+ * This sets input voltage threshold to keep the input voltage higher than
+ * configured.
  *
- * @param[in] enable true to enable, false to disable
+ * This feature is disbled by default on reset.
+ *
+ * @param[in] opt @ref bq25180_vindpm
  */
-void bq25180_enable_vindpm(bool enable);
+void bq25180_enable_vindpm(enum bq25180_vindpm opt);
 
 /**
  * @brief Enable of disable Dynamic Power Path Management Mode
@@ -247,14 +257,6 @@ void bq25180_enable_vindpm(bool enable);
  * @param[in] enable true to enable, false to disable
  */
 void bq25180_enable_dppm(bool enable);
-
-/**
- * @brief Set input voltage threshold to keep the input voltage higher
- *
- * @param[in] millivoltage 4200mV, 4500mV, 4700mV and 0 to disable are
- *            supported
- */
-void bq25180_set_vindpm_voltage(uint16_t millivoltage);
 
 /**
  * @brief Set the maximum input current
@@ -287,6 +289,12 @@ void bq25180_set_sys_source(enum bq25180_sys_source source);
  * @param[in] val one of @ref bq25180_sys_regulation
  */
 void bq25180_set_sys_voltage(enum bq25180_sys_regulation val);
+
+/* TODO: Implement bq25180_enable_interrupt() */
+/* TODO: Implement bq25180_disable_interrupt() */
+/* TODO: Implement bq25180_enable_button() */
+/* TODO: Implement bq25180_shipmode(void) */
+/* TODO: Implement bq25180_shutdown_mode(void) */
 
 /**
  * @brief Read a register value via I2C
