@@ -1,0 +1,89 @@
+/*
+ * SPDX-FileCopyrightText: 2022 Kyunghwan Kwon <k@mononn.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef FPL_BLE_H
+#define FPL_BLE_H
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+#include "net/ble_interface.h"
+#include "net/util.h"
+#include <stdbool.h>
+
+#define BLE_ADV_MIN_INTERVAL_MS			20U
+#define BLE_ADV_MAX_INTERVAL_MS			10028U
+
+void ble_adv_payload_clear(struct ble_adv_payload *buf);
+int ble_adv_payload_add(struct ble_adv_payload *buf, uint8_t type,
+			const void *data, uint8_t data_len);
+
+static inline void ble_register_gap_event_callback(struct ble *iface,
+						  ble_event_callback_t cb)
+{
+	((struct ble_interface *)iface)->register_gap_event_callback(iface, cb);
+}
+
+static inline void ble_register_gatt_event_callback(struct ble *iface,
+						  ble_event_callback_t cb)
+{
+	((struct ble_interface *)iface)->register_gatt_event_callback(iface, cb);
+}
+
+static inline int ble_adv_init(struct ble *iface, enum ble_adv_mode mode)
+{
+	return ((struct ble_interface *)iface)->adv_init(iface, mode);
+}
+
+static inline int ble_adv_set_interval(struct ble *iface,
+			uint16_t min_ms, uint16_t max_ms)
+{
+	return ((struct ble_interface *)iface)->adv_set_interval(iface,
+						min_ms, max_ms);
+}
+
+static inline int ble_adv_set_duration(struct ble *iface, uint32_t msec)
+{
+	return ((struct ble_interface *)iface)->adv_set_duration(iface, msec);
+}
+
+static inline int ble_adv_set_payload(struct ble *iface,
+			const struct ble_adv_payload *payload)
+{
+	return ((struct ble_interface *)iface)->adv_set_payload(iface, payload);
+}
+
+static inline int ble_adv_set_scan_response(struct ble *iface,
+			const struct ble_adv_payload *payload)
+{
+	return ((struct ble_interface *)iface)->adv_set_scan_response(iface,
+						payload);
+}
+
+static inline int ble_adv_start(struct ble *iface)
+{
+	return ((struct ble_interface *)iface)->adv_start(iface);
+}
+
+static inline int ble_adv_stop(struct ble *iface)
+{
+	return ((struct ble_interface *)iface)->adv_stop(iface);
+}
+
+#if defined(BLE_DEFAULT_INTERFACE)
+#define ble_create_default	CONCAT(BLE_DEFAULT_INTERFACE, _ble_create)
+#define ble_destroy_default	CONCAT(BLE_DEFAULT_INTERFACE, _ble_destroy)
+#endif
+
+struct ble *ble_create_default(void);
+void ble_destroy_default(struct ble *iface);
+
+#if defined(__cplusplus)
+}
+#endif
+
+#endif /* FPL_BLE_H */
