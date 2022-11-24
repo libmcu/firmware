@@ -74,6 +74,30 @@ static inline int ble_adv_stop(struct ble *iface)
 	return ((struct ble_interface *)iface)->adv_stop(iface);
 }
 
+static inline struct ble_gatt_service *ble_gatt_create_service(
+		struct ble *iface, void *mem, uint16_t memsize,
+		const uint8_t *uuid, uint8_t uuid_len,
+		bool primary, uint8_t nr_chrs)
+{
+	return ((struct ble_interface *)iface)->gatt_create_service(mem,
+			memsize, uuid, uuid_len, primary, nr_chrs);
+}
+
+static inline int ble_gatt_add_characteristic(struct ble *iface,
+		struct ble_gatt_service *svc,
+		const uint8_t *uuid, uint8_t uuid_len,
+		struct ble_gatt_characteristic *chr)
+{
+	return ((struct ble_interface *)iface)->gatt_add_characteristic(svc,
+			uuid, uuid_len, chr);
+}
+
+static inline int ble_gatt_register_service(struct ble *iface,
+		struct ble_gatt_service *svc)
+{
+	return ((struct ble_interface *)iface)->gatt_register_service(svc);
+}
+
 #if defined(BLE_DEFAULT_INTERFACE)
 #define ble_create_default	CONCAT(BLE_DEFAULT_INTERFACE, _ble_create)
 #define ble_destroy_default	CONCAT(BLE_DEFAULT_INTERFACE, _ble_destroy)

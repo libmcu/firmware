@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <inttypes.h>
 
@@ -36,25 +37,43 @@ enum ble_gap_evt {
 	BLE_GAP_EVT_MAX,
 };
 
-enum ble_gatt_evt {
-	BLE_GATT_EVT_MAX,
+enum ble_gatt_op {
+	BLE_GATT_OP_READ			= 0x0001,
+	BLE_GATT_OP_WRITE			= 0x0002,
+	BLE_GATT_OP_NOTIFY			= 0x0004,
+	BLE_GATT_OP_INDICATE			= 0x0008,
+	BLE_GATT_OP_ENC_READ			= 0x0010,
+	BLE_GATT_OP_AUTH_READ			= 0x0020,
+	BLE_GATT_OP_AUTHORIZE_READ		= 0x0040,
+	BLE_GATT_OP_ENC_WRITE			= 0x0080,
+	BLE_GATT_OP_AUTH_WRITE			= 0x0100,
+	BLE_GATT_OP_AUTHORIZE_WRITE		= 0x0200,
 };
+
+struct ble;
+struct ble_gatt_service;
+
+typedef void (*ble_event_callback_t)(struct ble *iface,
+		uint8_t evt, const void *msg);
+typedef void (*ble_gatt_characteristic_handler)(uint8_t op,
+		const void *data, uint16_t data_size, void *user_ctx);
 
 struct ble_adv_payload {
 	uint8_t payload[BLE_ADV_MAX_PAYLOAD_SIZE];
 	uint8_t index;
 };
 
-struct ble;
-typedef void (*ble_event_callback_t)(struct ble *iface,
-				     uint8_t evt, const void *msg);
+struct ble_gatt_characteristic {
+	ble_gatt_characteristic_handler handler;
+	void *user_ctx;
+	uint16_t op;
+};
 
 struct ble_interface {
 	void (*register_gap_event_callback)(struct ble *iface,
 				ble_event_callback_t cb);
 	void (*register_gatt_event_callback)(struct ble *iface,
 				ble_event_callback_t cb);
-	//int (*set_device_address)(type, addr);
 
 	int (*adv_init)(struct ble *iface, enum ble_adv_mode mode);
 	int (*adv_set_interval)(struct ble *iface,
@@ -67,8 +86,13 @@ struct ble_interface {
 	int (*adv_start)(struct ble *iface);
 	int (*adv_stop)(struct ble *iface);
 
-	//int (*sm_set_io_capability)(opt);
-	//int (*sm_enable)(bonding, mitm, secure);
+	struct ble_gatt_service *(*gatt_create_service)(void *mem, uint16_t memsize,
+				const uint8_t *uuid, uint8_t uuid_len,
+				bool primary, uint8_t nr_characteristics);
+	int (*gatt_add_characteristic)(struct ble_gatt_service *svc,
+				const uint8_t *uuid, uint8_t uuid_len,
+				struct ble_gatt_characteristic *chr);
+	int (*gatt_register_service)(struct ble_gatt_service *svc);
 };
 
 #if defined(__cplusplus)

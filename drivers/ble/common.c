@@ -10,14 +10,14 @@ void ble_adv_payload_clear(struct ble_adv_payload *buf)
 int ble_adv_payload_add(struct ble_adv_payload *buf, uint8_t type,
 			const void *data, uint8_t data_len)
 {
-	if ((buf->index + data_len + 2) > sizeof(buf->payload)) {
+	if ((buf->index + data_len + 2/*len+type*/) > sizeof(buf->payload)) {
 		return -ENOSPC;
 	}
 
 	uint8_t *p = &buf->payload[buf->index];
-	buf->index += data_len + 1/*len*/ + 1/*type*/;
+	buf->index += data_len + 2;
 
-	p[0] = data_len + 1;
+	p[0] = data_len + 1/*type*/;
 	p[1] = type;
 	memcpy(&p[2], data, data_len);
 
