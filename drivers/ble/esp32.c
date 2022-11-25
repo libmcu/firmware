@@ -5,7 +5,6 @@
  */
 
 #include "net/ble.h"
-#include "net/ble_common_data_type.h"
 
 #include <errno.h>
 #include <string.h>
@@ -19,11 +18,10 @@
 #include "host/util/util.h"
 
 #include "libmcu/logging.h"
-#include "libmcu/hexdump.h"
 #include "libmcu/assert.h"
 #include "libmcu/compiler.h"
 
-LIBMCU_STATIC_ASSERT(BLE_GAP_EVT_MAX < UINT8_MAX, "");
+LIBMCU_ASSERT(BLE_GAP_EVT_MAX < UINT8_MAX);
 
 struct ble {
 	struct ble_interface api;
@@ -42,6 +40,8 @@ struct ble {
 	} adv;
 
 	uint8_t addr_type;
+	uint8_t addr[6];
+	volatile bool ready;
 };
 
 struct ble_gatt_characteristic_handlers {
@@ -65,8 +65,7 @@ struct ble_gatt_service {
 	} characteristics;
 };
 
-static volatile bool ready;
-static uint8_t adv_addr_type;
+static struct ble *onair;
 
 static void svc_mem_init(struct ble_gatt_service *svc, void *mem, uint16_t memsize)
 {
@@ -115,20 +114,27 @@ static int on_gap_event(struct ble_gap_event *event, void *arg)
 {
 	struct ble *iface = (struct ble *)arg;
 	struct ble_gap_conn_desc desc;
-
-	debug("GAP event %u", event->type);
+	enum ble_gap_evt evt = BLE_GAP_EVT_UNKNOWN;
 
 	switch (event->type) {
 	case BLE_GAP_EVENT_CONNECT:
+		evt = BLE_GAP_EVT_CONNECTED;
+		break;
 	case BLE_GAP_EVENT_DISCONNECT:
-	case BLE_GAP_EVENT_CONN_UPDATE:
+		evt = BLE_GAP_EVT_DISCONNECTED;
+		break;
 	case BLE_GAP_EVENT_ADV_COMPLETE:
+		evt = BLE_GAP_EVT_ADV_COMPLETE;
+		break;
+	case BLE_GAP_EVENT_CONN_UPDATE:
 	case BLE_GAP_EVENT_MTU:
 	default:
+		evt = event->type;
 		break;
 	}
 
 	if (iface && iface->gap_event_callback) {
+		iface->gap_event_callback(iface, evt, 0);
 	}
 
 	return 0;
@@ -168,23 +174,24 @@ static void on_reset(int reason)
 
 static void on_sync(void)
 {
+	assert(onair);
+
 	int rc = ble_hs_util_ensure_addr(0);
 	assert(rc == 0);
 
-	rc = ble_hs_id_infer_auto(0, &adv_addr_type);
+	rc = ble_hs_id_infer_auto(0, &onair->addr_type);
 	if (rc != 0) {
 		error("error determining address type; rc=%d", rc);
-		return;
+		assert(0);
 	}
 
-	uint8_t addr_val[6] = {0};
-	rc = ble_hs_id_copy_addr(adv_addr_type, addr_val, NULL);
+	rc = ble_hs_id_copy_addr(onair->addr_type, onair->addr, NULL);
+	if (rc != 0) {
+		error("error reading address; rc=%d", rc);
+		assert(0);
+	}
 
-	char buf[12];
-	hexdump(buf, sizeof(buf), addr_val, sizeof(addr_val));
-	info("Device Address: %.*s, type %d", sizeof(buf), buf, adv_addr_type);
-
-	ready = true;
+	onair->ready = true;
 }
 
 static void ble_spp_server_host_task(void *param)
@@ -238,7 +245,7 @@ static int adv_set_scan_response(struct ble *iface,
 
 static int adv_start(struct ble *iface)
 {
-	if (!ready) {
+	if (!iface->ready) {
 		return -EAGAIN;
 	}
 
@@ -274,7 +281,7 @@ static int adv_start(struct ble *iface)
 		break;
 	}
 
-	rc = ble_gap_adv_start(adv_addr_type, NULL,
+	rc = ble_gap_adv_start(iface->addr_type, NULL,
 			(int32_t)iface->adv.duration_ms,
 			&adv_params, on_gap_event, iface);
 	if (rc != 0) {
@@ -287,7 +294,7 @@ static int adv_start(struct ble *iface)
 
 static int adv_stop(struct ble *iface)
 {
-	return 0;
+	return ble_gap_adv_stop();
 }
 
 static int adv_init(struct ble *iface, enum ble_adv_mode mode)
@@ -420,10 +427,14 @@ struct ble *esp_ble_create(void)
 			.gatt_create_service = gatt_create_service,
 			.gatt_add_characteristic = gatt_add_characteristic,
 			.gatt_register_service = gatt_register_service,
-},
+		},
 	};
 
-	initialize(&iface);
+	if (!onair) {
+		initialize(&iface);
+	}
+
+	onair = &iface;
 
 	return &iface;
 }

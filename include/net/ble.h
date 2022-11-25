@@ -18,7 +18,7 @@ extern "C" {
 #define BLE_ADV_MIN_INTERVAL_MS			20U
 #define BLE_ADV_MAX_INTERVAL_MS			10028U
 
-void ble_adv_payload_clear(struct ble_adv_payload *buf);
+void ble_adv_payload_init(struct ble_adv_payload *buf);
 int ble_adv_payload_add(struct ble_adv_payload *buf, uint8_t type,
 			const void *data, uint8_t data_len);
 

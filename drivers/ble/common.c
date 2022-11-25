@@ -2,7 +2,7 @@
 #include <string.h>
 #include <errno.h>
 
-void ble_adv_payload_clear(struct ble_adv_payload *buf)
+void ble_adv_payload_init(struct ble_adv_payload *buf)
 {
 	memset(buf, 0, sizeof(*buf));
 }
