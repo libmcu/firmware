@@ -294,6 +294,10 @@ static int adv_start(struct ble *iface)
 
 static int adv_stop(struct ble *iface)
 {
+	if (!ble_gap_adv_active()) {
+		return 0;
+	}
+
 	return ble_gap_adv_stop();
 }
 
@@ -411,30 +415,47 @@ static void initialize(struct ble *iface)
 	nimble_port_freertos_init(ble_spp_server_host_task);
 }
 
+static int enable_device(struct ble *iface)
+{
+	if (!onair) {
+		initialize(iface);
+		onair = iface;
+	}
+
+	return 0;
+}
+
+static int disable_device(struct ble *iface)
+{
+	int rc = nimble_port_stop();
+	nimble_port_deinit();
+	rc |= esp_nimble_hci_and_controller_deinit();
+
+	return rc;
+}
+
 struct ble *esp_ble_create(void)
 {
 	static struct ble iface = {
 		.api = {
-			.adv_init = adv_init,
+			.enable = enable_device,
+			.disable = disable_device,
 			.register_gap_event_callback = register_gap_event_callback,
 			.register_gatt_event_callback = register_gatt_event_callback,
+
+			.adv_init = adv_init,
 			.adv_set_interval = adv_set_interval,
 			.adv_set_duration = adv_set_duration,
 			.adv_set_payload = adv_set_payload,
 			.adv_set_scan_response = adv_set_scan_response,
 			.adv_start = adv_start,
 			.adv_stop = adv_stop,
+
 			.gatt_create_service = gatt_create_service,
 			.gatt_add_characteristic = gatt_add_characteristic,
 			.gatt_register_service = gatt_register_service,
 		},
 	};
-
-	if (!onair) {
-		initialize(&iface);
-	}
-
-	onair = &iface;
 
 	return &iface;
 }

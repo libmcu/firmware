@@ -22,6 +22,16 @@ void ble_adv_payload_init(struct ble_adv_payload *buf);
 int ble_adv_payload_add(struct ble_adv_payload *buf, uint8_t type,
 			const void *data, uint8_t data_len);
 
+static inline int ble_enable(struct ble *iface)
+{
+	((struct ble_interface *)iface)->enable(iface);
+}
+
+static inline int ble_disable(struct ble *iface)
+{
+	((struct ble_interface *)iface)->enable(iface);
+}
+
 static inline void ble_register_gap_event_callback(struct ble *iface,
 						  ble_event_callback_t cb)
 {

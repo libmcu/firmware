@@ -71,6 +71,9 @@ struct ble_gatt_characteristic {
 };
 
 struct ble_interface {
+	int (*enable)(struct ble *iface);
+	int (*disable)(struct ble *iface);
+
 	void (*register_gap_event_callback)(struct ble *iface,
 			ble_event_callback_t cb);
 	void (*register_gatt_event_callback)(struct ble *iface,
