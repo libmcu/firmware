@@ -13,6 +13,7 @@
 #include "nimble/nimble_port.h"
 #include "nimble/nimble_port_freertos.h"
 #include "host/ble_hs.h"
+#include "host/ble_hs_pvcy.h"
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 #include "host/util/util.h"
@@ -40,7 +41,7 @@ struct ble {
 	} adv;
 
 	uint8_t addr_type;
-	uint8_t addr[6];
+	uint8_t addr[BLE_ADDR_LEN];
 	volatile bool ready;
 };
 
@@ -66,6 +67,7 @@ struct ble_gatt_service {
 };
 
 static struct ble *onair;
+static int adv_start(struct ble *iface);
 
 static void svc_mem_init(struct ble_gatt_service *svc, void *mem, uint16_t memsize)
 {
@@ -87,6 +89,35 @@ static void *svc_mem_alloc(struct ble_gatt_service *svc, uint16_t size)
 	}
 
 	return p;
+}
+
+static enum ble_device_addr read_device_address(uint8_t addr[BLE_ADDR_LEN])
+{
+	ble_addr_t t;
+
+	int rc = ble_hs_id_infer_auto(0, &t.type);
+	if (rc != 0) {
+		error("error determining address type; rc=%d", rc);
+		assert(0);
+	}
+
+	rc = ble_hs_id_copy_addr(t.type, t.val, NULL);
+	if (rc != 0) {
+		error("error reading address; rc=%d", rc);
+		assert(0);
+	}
+
+	memcpy(addr, t.val, BLE_ADDR_LEN);
+
+	if (BLE_ADDR_IS_STATIC(&t)) {
+		return BLE_ADDR_STATIC_RPA;
+	} else if (BLE_ADDR_IS_RPA(&t)) {
+		return BLE_ADDR_PRIVATE_RPA;
+	} else if (BLE_ADDR_IS_NRPA(&t)) {
+		return BLE_ADDR_PRIVATE_NRPA;
+	}
+
+	return BLE_ADDR_PUBLIC;
 }
 
 static int on_characteristic_request(uint16_t conn_handle, uint16_t attr_handle,
@@ -124,6 +155,10 @@ static int on_gap_event(struct ble_gap_event *event, void *arg)
 		evt = BLE_GAP_EVT_DISCONNECTED;
 		break;
 	case BLE_GAP_EVENT_ADV_COMPLETE:
+		if (onair->adv.duration_ms == BLE_HS_FOREVER) {
+			adv_start(onair);
+			return 0;
+		}
 		evt = BLE_GAP_EVT_ADV_COMPLETE;
 		break;
 	case BLE_GAP_EVENT_CONN_UPDATE:
@@ -179,16 +214,12 @@ static void on_sync(void)
 	int rc = ble_hs_util_ensure_addr(0);
 	assert(rc == 0);
 
-	rc = ble_hs_id_infer_auto(0, &onair->addr_type);
-	if (rc != 0) {
-		error("error determining address type; rc=%d", rc);
-		assert(0);
-	}
-
-	rc = ble_hs_id_copy_addr(onair->addr_type, onair->addr, NULL);
-	if (rc != 0) {
-		error("error reading address; rc=%d", rc);
-		assert(0);
+	if (onair->addr_type == BLE_ADDR_PRIVATE_RPA ||
+			onair->addr_type == BLE_ADDR_PRIVATE_NRPA) {
+		uint8_t type = onair->addr_type - 1;/*1:RPA, 2:NRPA, 0:disable*/
+		extern int ble_hs_pvcy_rpa_config(uint8_t enable);
+		rc = ble_hs_pvcy_rpa_config(type);
+		assert(rc == 0);
 	}
 
 	onair->ready = true;
@@ -285,8 +316,14 @@ static int adv_start(struct ble *iface)
 			(int32_t)iface->adv.duration_ms,
 			&adv_params, on_gap_event, iface);
 	if (rc != 0) {
-		error("adv not started: %d", rc);
+		error("adv failure: %d", rc);
 		return -EFAULT;
+	}
+
+	enum ble_device_addr type = read_device_address(iface->addr);
+	if (type != iface->addr_type) {
+		warn("addr type mismatch: %d expected but %d",
+				iface->addr_type, type);
 	}
 
 	return 0;
@@ -398,6 +435,13 @@ static int gatt_register_service(struct ble_gatt_service *svc)
 	return rc;
 }
 
+static enum ble_device_addr get_device_address(struct ble *iface,
+		uint8_t addr[BLE_ADDR_LEN])
+{
+	memcpy(addr, iface->addr, BLE_ADDR_LEN);
+	return iface->addr_type;
+}
+
 static void initialize(struct ble *iface)
 {
 	ESP_ERROR_CHECK(esp_nimble_hci_and_controller_init());
@@ -409,15 +453,30 @@ static void initialize(struct ble *iface)
 	ble_hs_cfg.gatts_register_arg = iface;
 	ble_hs_cfg.store_status_cb = ble_store_util_status_rr;
 
+	if (iface->addr_type == BLE_ADDR_PRIVATE_RPA ||
+			iface->addr_type == BLE_ADDR_PRIVATE_NRPA) {
+		ble_hs_cfg.sm_our_key_dist = BLE_SM_PAIR_KEY_DIST_ID |
+				BLE_SM_PAIR_KEY_DIST_ENC;
+		ble_hs_cfg.sm_their_key_dist = BLE_SM_PAIR_KEY_DIST_ID |
+				BLE_SM_PAIR_KEY_DIST_ENC;
+	}
+
 	ble_svc_gap_init();
 	ble_svc_gatt_init();
+	ble_svc_gap_device_name_set("libmcu");
 
 	nimble_port_freertos_init(ble_spp_server_host_task);
 }
 
-static int enable_device(struct ble *iface)
+static int enable_device(struct ble *iface,
+		enum ble_device_addr addr_type, uint8_t addr[BLE_ADDR_LEN])
 {
 	if (!onair) {
+		iface->addr_type = addr_type;
+		if (addr) {
+			memcpy(iface->addr, addr, sizeof(iface->addr));
+		}
+
 		initialize(iface);
 		onair = iface;
 	}
@@ -427,9 +486,18 @@ static int enable_device(struct ble *iface)
 
 static int disable_device(struct ble *iface)
 {
-	int rc = nimble_port_stop();
+	int rc = 0;
+
+	if (iface->addr_type == BLE_ADDR_PRIVATE_RPA ||
+			iface->addr_type == BLE_ADDR_PRIVATE_NRPA) {
+		extern int ble_hs_pvcy_rpa_config(uint8_t enable);
+		rc = ble_hs_pvcy_rpa_config(0);
+	}
+
+	rc |= nimble_port_stop();
 	nimble_port_deinit();
 	rc |= esp_nimble_hci_and_controller_deinit();
+	onair = NULL;
 
 	return rc;
 }
@@ -442,6 +510,7 @@ struct ble *esp_ble_create(void)
 			.disable = disable_device,
 			.register_gap_event_callback = register_gap_event_callback,
 			.register_gatt_event_callback = register_gatt_event_callback,
+			.get_device_address = get_device_address,
 
 			.adv_init = adv_init,
 			.adv_set_interval = adv_set_interval,

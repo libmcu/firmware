@@ -20,6 +20,7 @@ extern "C" {
 		(37U - 6U/*advertiser address*/ - 2U/*header+length*/)
 #endif
 #define BLE_TIME_FOREVER			UINT32_MAX
+#define BLE_ADDR_LEN				6
 
 enum ble_adv_mode {
 	BLE_ADV_IND,         /**< connectable     scannable     undirected */
@@ -36,6 +37,13 @@ enum ble_gap_evt {
 	BLE_GAP_EVT_ADV_COMPLETE,
 	BLE_GAP_EVT_MTU,
 	BLE_GAP_EVT_MAX,
+};
+
+enum ble_device_addr {
+	BLE_ADDR_PUBLIC,
+	BLE_ADDR_STATIC_RPA,
+	BLE_ADDR_PRIVATE_RPA,
+	BLE_ADDR_PRIVATE_NRPA,
 };
 
 enum ble_gatt_op {
@@ -71,8 +79,11 @@ struct ble_gatt_characteristic {
 };
 
 struct ble_interface {
-	int (*enable)(struct ble *iface);
+	int (*enable)(struct ble *iface, enum ble_device_addr addr_type,
+			uint8_t addr[BLE_ADDR_LEN]);
 	int (*disable)(struct ble *iface);
+	enum ble_device_addr (*get_device_address)(struct ble *iface,
+			uint8_t addr[BLE_ADDR_LEN]);
 
 	void (*register_gap_event_callback)(struct ble *iface,
 			ble_event_callback_t cb);

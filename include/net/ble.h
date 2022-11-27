@@ -22,14 +22,21 @@ void ble_adv_payload_init(struct ble_adv_payload *buf);
 int ble_adv_payload_add(struct ble_adv_payload *buf, uint8_t type,
 			const void *data, uint8_t data_len);
 
-static inline int ble_enable(struct ble *iface)
+static inline int ble_enable(struct ble *iface,
+		enum ble_device_addr addr_type, uint8_t addr[BLE_ADDR_LEN])
 {
-	((struct ble_interface *)iface)->enable(iface);
+	return ((struct ble_interface *)iface)->enable(iface, addr_type, addr);
 }
 
 static inline int ble_disable(struct ble *iface)
 {
-	((struct ble_interface *)iface)->enable(iface);
+	return ((struct ble_interface *)iface)->disable(iface);
+}
+
+static inline enum ble_device_addr ble_get_device_address(struct ble *iface,
+		uint8_t addr[BLE_ADDR_LEN])
+{
+	return ((struct ble_interface *)iface)->get_device_address(iface, addr);
 }
 
 static inline void ble_register_gap_event_callback(struct ble *iface,
