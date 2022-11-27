@@ -155,11 +155,15 @@ static int on_gap_event(struct ble_gap_event *event, void *arg)
 		evt = BLE_GAP_EVT_DISCONNECTED;
 		break;
 	case BLE_GAP_EVENT_ADV_COMPLETE:
-		if (onair->adv.duration_ms == BLE_HS_FOREVER) {
-			adv_start(onair);
-			return 0;
-		}
 		evt = BLE_GAP_EVT_ADV_COMPLETE;
+		if (event->adv_complete.reason != 0 &&
+				event->adv_complete.reason != BLE_HS_ETIMEOUT) {
+			evt = BLE_GAP_EVT_ADV_SUSPENDED;
+			error("adv stopped: %d", event->adv_complete.reason);
+			if (iface->adv.duration_ms == BLE_HS_FOREVER) {
+				adv_start(iface);
+			}
+		}
 		break;
 	case BLE_GAP_EVENT_CONN_UPDATE:
 	case BLE_GAP_EVENT_MTU:
