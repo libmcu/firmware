@@ -40,6 +40,13 @@ enum ble_gap_evt {
 	BLE_GAP_EVT_MAX,
 };
 
+enum ble_gatt_evt {
+	BLE_GATT_EVT_READ_CHR,
+	BLE_GATT_EVT_WRITE_CHR,
+	BLE_GATT_EVT_READ_DSC,
+	BLE_GATT_EVT_WRITE_DSC,
+};
+
 enum ble_device_addr {
 	BLE_ADDR_PUBLIC,
 	BLE_ADDR_STATIC_RPA,
@@ -65,7 +72,13 @@ struct ble_gatt_service;
 
 typedef void (*ble_event_callback_t)(struct ble *iface,
 		uint8_t evt, const void *msg);
-typedef void (*ble_gatt_characteristic_handler)(uint8_t op,
+
+struct ble_handler_context {
+	uint8_t event_type;
+	void *ctx;
+};
+
+typedef void (*ble_gatt_characteristic_handler)(struct ble_handler_context *ctx,
 		const void *data, uint16_t data_size, void *user_ctx);
 
 struct ble_adv_payload {
@@ -109,6 +122,8 @@ struct ble_interface {
 			const uint8_t *uuid, uint8_t uuid_len,
 			struct ble_gatt_characteristic *chr);
 	int (*gatt_register_service)(struct ble_gatt_service *svc);
+	int (*gatt_response)(struct ble_handler_context *ctx,
+			const void *data, uint16_t data_size);
 };
 
 #if defined(__cplusplus)

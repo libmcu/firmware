@@ -45,7 +45,7 @@ struct ble {
 	volatile bool ready;
 };
 
-struct ble_gatt_characteristic_handlers {
+struct gatt_characteristic_handler {
 	ble_gatt_characteristic_handler func;
 	void *user_ctx;
 };
@@ -62,12 +62,13 @@ struct ble_gatt_service {
 	struct {
 		uint8_t index;
 		uint8_t nr_max;
-		struct ble_gatt_characteristic_handlers *handlers;
+		struct gatt_characteristic_handler *handlers;
 	} characteristics;
 };
 
 static struct ble *onair;
 static int adv_start(struct ble *iface);
+static int adv_stop(struct ble *iface);
 
 static void svc_mem_init(struct ble_gatt_service *svc, void *mem, uint16_t memsize)
 {
@@ -120,22 +121,36 @@ static enum ble_device_addr read_device_address(uint8_t addr[BLE_ADDR_LEN])
 	return BLE_ADDR_PUBLIC;
 }
 
+static const struct gatt_characteristic_handler *get_chr_handler(
+		const struct ble_gatt_service *svc,
+		const struct ble_gatt_chr_def *chr)
+{
+	for (uint8_t i = 0; svc->base[0].characteristics != NULL &&
+			svc->base[0].characteristics[i].uuid != NULL &&
+			i < svc->characteristics.nr_max; i++) {
+		if (&svc->base[0].characteristics[i] == chr) {
+			return &svc->characteristics.handlers[i];
+		}
+	}
+
+	return NULL;
+}
+
 static int on_characteristic_request(uint16_t conn_handle, uint16_t attr_handle,
 			  struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
 	struct ble_gatt_service *svc = (struct ble_gatt_service *)arg;
 
-	switch(ctxt->op){
-	case BLE_GATT_ACCESS_OP_READ_CHR:
-		debug("Callback for read");
-		break;
-	case BLE_GATT_ACCESS_OP_WRITE_CHR:
-		debug("Data received in write event,conn_handle = %x,attr_handle = %x",
-				conn_handle,attr_handle);
-		break;
-	default:
-		debug("Default Callback");
-		break;
+	const struct gatt_characteristic_handler *handler =
+			get_chr_handler(svc, ctxt->chr);
+
+	if (handler && handler->func) {
+		struct ble_handler_context ctx = {
+			.event_type = ctxt->op,
+			.ctx = ctxt,
+		};
+		handler->func(&ctx, ctxt->om->om_data, ctxt->om->om_len,
+				handler->user_ctx);
 	}
 
 	return 0;
@@ -363,7 +378,7 @@ static struct ble_gatt_service *gatt_create_service(void *mem, uint16_t memsize,
 	assert(memsize > (uint16_t)(sizeof(struct ble_gatt_service) +
 			(nr_chrs+1/*null desc*/) * sizeof(struct ble_gatt_chr_def) +
 			nr_chrs * sizeof(struct ble_gatt_dsc_def) * 6/*max.desc*/ +
-			nr_chrs * sizeof(struct ble_gatt_characteristic_handlers)));
+			nr_chrs * sizeof(struct gatt_characteristic_handler)));
 	assert(uuid != NULL);
 	assert(uuid_len == 2 || uuid_len == 4 || uuid_len == 16);
 
@@ -379,8 +394,8 @@ static struct ble_gatt_service *gatt_create_service(void *mem, uint16_t memsize,
 	struct ble_gatt_chr_def *chrs = (struct ble_gatt_chr_def *)
 			svc_mem_alloc(svc, (nr_chrs+1) * sizeof(*chrs));
 
-	struct ble_gatt_characteristic_handlers *handlers =
-			(struct ble_gatt_characteristic_handlers *)
+	struct gatt_characteristic_handler *handlers =
+			(struct gatt_characteristic_handler *)
 			svc_mem_alloc(svc, nr_chrs * sizeof(*handlers));
 
 	svc->base[0].type = primary?
@@ -437,6 +452,13 @@ static int gatt_register_service(struct ble_gatt_service *svc)
 		ble_gatts_add_svcs(svc->base);
 
 	return rc;
+}
+
+static int gatt_response(struct ble_handler_context *ctx,
+		const void *data, uint16_t data_size)
+{
+	struct ble_gatt_access_ctxt *p = (struct ble_gatt_access_ctxt *)ctx->ctx;
+	return os_mbuf_append(p->om, data, sizeof(data_size));
 }
 
 static enum ble_device_addr get_device_address(struct ble *iface,
@@ -527,6 +549,7 @@ struct ble *esp_ble_create(void)
 			.gatt_create_service = gatt_create_service,
 			.gatt_add_characteristic = gatt_add_characteristic,
 			.gatt_register_service = gatt_register_service,
+			.gatt_response = gatt_response,
 		},
 	};
 

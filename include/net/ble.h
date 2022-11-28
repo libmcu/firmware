@@ -115,6 +115,14 @@ static inline int ble_gatt_register_service(struct ble *iface,
 	return ((struct ble_interface *)iface)->gatt_register_service(svc);
 }
 
+static inline int ble_gatt_response(struct ble *iface,
+		struct ble_handler_context *ctx,
+		const void *data, uint16_t data_size)
+{
+	return ((struct ble_interface *)iface)->gatt_response(ctx,
+				data, data_size);
+}
+
 #if defined(BLE_DEFAULT_INTERFACE)
 #define ble_create_default	CONCAT(BLE_DEFAULT_INTERFACE, _ble_create)
 #define ble_destroy_default	CONCAT(BLE_DEFAULT_INTERFACE, _ble_destroy)
