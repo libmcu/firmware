@@ -79,7 +79,7 @@ struct ble_handler_context {
 };
 
 typedef void (*ble_gatt_characteristic_handler)(struct ble_handler_context *ctx,
-		const void *data, uint16_t data_size, void *user_ctx);
+		const void *data, uint16_t datasize, void *user_ctx);
 
 struct ble_adv_payload {
 	uint8_t payload[BLE_ADV_MAX_PAYLOAD_SIZE];
@@ -118,12 +118,14 @@ struct ble_interface {
 	struct ble_gatt_service *(*gatt_create_service)(void *mem, uint16_t memsize,
 			const uint8_t *uuid, uint8_t uuid_len,
 			bool primary, uint8_t nr_characteristics);
-	int (*gatt_add_characteristic)(struct ble_gatt_service *svc,
+	const uint16_t *(*gatt_add_characteristic)(struct ble_gatt_service *svc,
 			const uint8_t *uuid, uint8_t uuid_len,
 			struct ble_gatt_characteristic *chr);
 	int (*gatt_register_service)(struct ble_gatt_service *svc);
 	int (*gatt_response)(struct ble_handler_context *ctx,
-			const void *data, uint16_t data_size);
+			const void *data, uint16_t datasize);
+	int (*gatt_notify)(struct ble *iface, const void *attr_handle,
+			const void *data, uint16_t datasize);
 };
 
 #if defined(__cplusplus)

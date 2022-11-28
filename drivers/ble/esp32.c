@@ -24,6 +24,10 @@
 
 LIBMCU_ASSERT(BLE_GAP_EVT_MAX < UINT8_MAX);
 
+#if !defined(BLE_DEFAULT_DEVICE_NAME)
+#define BLE_DEFAULT_DEVICE_NAME		"libmcu"
+#endif
+
 struct ble {
 	struct ble_interface api;
 
@@ -42,10 +46,12 @@ struct ble {
 
 	uint8_t addr_type;
 	uint8_t addr[BLE_ADDR_LEN];
+	uint16_t connection_handle;
 	volatile bool ready;
 };
 
 struct gatt_characteristic_handler {
+	uint16_t handle;
 	ble_gatt_characteristic_handler func;
 	void *user_ctx;
 };
@@ -165,9 +171,13 @@ static int on_gap_event(struct ble_gap_event *event, void *arg)
 	switch (event->type) {
 	case BLE_GAP_EVENT_CONNECT:
 		evt = BLE_GAP_EVT_CONNECTED;
+		if (event->connect.status == 0) {
+			iface->connection_handle = event->connect.conn_handle;
+		}
 		break;
 	case BLE_GAP_EVENT_DISCONNECT:
 		evt = BLE_GAP_EVT_DISCONNECTED;
+		iface->connection_handle = 0;
 		break;
 	case BLE_GAP_EVENT_ADV_COMPLETE:
 		evt = BLE_GAP_EVT_ADV_COMPLETE;
@@ -408,7 +418,7 @@ static struct ble_gatt_service *gatt_create_service(void *mem, uint16_t memsize,
 	return svc;
 }
 
-static int gatt_add_characteristic(struct ble_gatt_service *svc,
+static const uint16_t *gatt_add_characteristic(struct ble_gatt_service *svc,
 		const uint8_t *uuid, uint8_t uuid_len,
 		struct ble_gatt_characteristic *chr)
 {
@@ -429,6 +439,7 @@ static int gatt_add_characteristic(struct ble_gatt_service *svc,
 	p->uuid = (const ble_uuid_t *)uuid_converted;
 	p->access_cb = on_characteristic_request;
 	p->arg = svc;
+	p->val_handle = &svc->characteristics.handlers[i].handle;
 
 	if (chr->op & BLE_GATT_OP_READ) {
 		p->flags |= BLE_GATT_CHR_F_READ;
@@ -443,7 +454,7 @@ static int gatt_add_characteristic(struct ble_gatt_service *svc,
 		p->flags |= BLE_GATT_CHR_F_INDICATE;
 	}
 
-	return 0;
+	return p->val_handle;
 }
 
 static int gatt_register_service(struct ble_gatt_service *svc)
@@ -455,10 +466,20 @@ static int gatt_register_service(struct ble_gatt_service *svc)
 }
 
 static int gatt_response(struct ble_handler_context *ctx,
-		const void *data, uint16_t data_size)
+		const void *data, uint16_t datasize)
 {
 	struct ble_gatt_access_ctxt *p = (struct ble_gatt_access_ctxt *)ctx->ctx;
-	return os_mbuf_append(p->om, data, sizeof(data_size));
+	return os_mbuf_append(p->om, data, sizeof(datasize));
+}
+
+static int gatt_notify(struct ble *iface, const void *attr_handle,
+		const void *data, uint16_t datasize)
+{
+	uint16_t attr = *((uint16_t *)attr_handle);
+	struct os_mbuf *om;
+	om = ble_hs_mbuf_from_flat(data, datasize);
+
+	return ble_gattc_notify_custom(iface->connection_handle, attr, om);
 }
 
 static enum ble_device_addr get_device_address(struct ble *iface,
@@ -489,7 +510,7 @@ static void initialize(struct ble *iface)
 
 	ble_svc_gap_init();
 	ble_svc_gatt_init();
-	ble_svc_gap_device_name_set("libmcu");
+	ble_svc_gap_device_name_set(BLE_DEFAULT_DEVICE_NAME);
 
 	nimble_port_freertos_init(ble_spp_server_host_task);
 }
@@ -550,6 +571,7 @@ struct ble *esp_ble_create(void)
 			.gatt_add_characteristic = gatt_add_characteristic,
 			.gatt_register_service = gatt_register_service,
 			.gatt_response = gatt_response,
+			.gatt_notify = gatt_notify,
 		},
 	};
 

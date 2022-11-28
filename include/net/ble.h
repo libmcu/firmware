@@ -100,7 +100,7 @@ static inline struct ble_gatt_service *ble_gatt_create_service(
 			memsize, uuid, uuid_len, primary, nr_chrs);
 }
 
-static inline int ble_gatt_add_characteristic(struct ble *iface,
+static inline const uint16_t *ble_gatt_add_characteristic(struct ble *iface,
 		struct ble_gatt_service *svc,
 		const uint8_t *uuid, uint8_t uuid_len,
 		struct ble_gatt_characteristic *chr)
@@ -117,10 +117,17 @@ static inline int ble_gatt_register_service(struct ble *iface,
 
 static inline int ble_gatt_response(struct ble *iface,
 		struct ble_handler_context *ctx,
-		const void *data, uint16_t data_size)
+		const void *data, uint16_t datasize)
 {
 	return ((struct ble_interface *)iface)->gatt_response(ctx,
-				data, data_size);
+				data, datasize);
+}
+
+static inline int ble_gatt_notify(struct ble *iface,
+		const void *attr_handle, const void *data, uint16_t datasize)
+{
+	return ((struct ble_interface *)iface)->gatt_notify(iface, attr_handle,
+				data, datasize);
 }
 
 #if defined(BLE_DEFAULT_INTERFACE)
