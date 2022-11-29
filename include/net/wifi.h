@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 #include "net/wifi_interface.h"
-#include "net/util.h"
+#include "util.h"
 
 struct wifi {
 	struct wifi_interface api;

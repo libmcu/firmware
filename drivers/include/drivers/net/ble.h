@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef FPL_BLE_INTERFACE_H
-#define FPL_BLE_INTERFACE_H
+#ifndef FPL_BLE_H
+#define FPL_BLE_H
 
 #if defined(__cplusplus)
 extern "C" {
@@ -20,7 +20,9 @@ extern "C" {
 		(37U - 6U/*advertiser address*/ - 2U/*header+length*/)
 #endif
 #define BLE_TIME_FOREVER			UINT32_MAX
-#define BLE_ADDR_LEN				6
+#define BLE_ADDR_LEN				6U
+#define BLE_ADV_MIN_INTERVAL_MS			20U
+#define BLE_ADV_MAX_INTERVAL_MS			10028U
 
 enum ble_adv_mode {
 	BLE_ADV_IND,         /**< connectable     scannable     undirected */
@@ -92,7 +94,7 @@ struct ble_gatt_characteristic {
 	uint16_t op;
 };
 
-struct ble_interface {
+struct ble_api {
 	int (*enable)(struct ble *iface, enum ble_device_addr addr_type,
 			uint8_t addr[BLE_ADDR_LEN]);
 	int (*disable)(struct ble *iface);
@@ -128,8 +130,10 @@ struct ble_interface {
 			const void *data, uint16_t datasize);
 };
 
+#include "drivers/net/ble_interface.h"
+
 #if defined(__cplusplus)
 }
 #endif
 
-#endif /* FPL_BLE_INTERFACE_H */
+#endif /* FPL_BLE_H */

@@ -29,7 +29,7 @@ LIBMCU_ASSERT(BLE_GAP_EVT_MAX < UINT8_MAX);
 #endif
 
 struct ble {
-	struct ble_interface api;
+	struct ble_api api;
 
 	ble_event_callback_t gap_event_callback;
 	ble_event_callback_t gatt_event_callback;
@@ -576,4 +576,9 @@ struct ble *esp_ble_create(void)
 	};
 
 	return &iface;
+}
+
+void esp_ble_destroy(struct ble *iface)
+{
+	memset(iface, 0, sizeof(*iface));
 }
