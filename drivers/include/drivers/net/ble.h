@@ -72,7 +72,7 @@ enum ble_gatt_op {
 struct ble;
 struct ble_gatt_service;
 
-typedef void (*ble_event_callback_t)(struct ble *iface,
+typedef void (*ble_event_callback_t)(struct ble *self,
 		uint8_t evt, const void *msg);
 
 struct ble_handler_context {
@@ -95,27 +95,27 @@ struct ble_gatt_characteristic {
 };
 
 struct ble_api {
-	int (*enable)(struct ble *iface, enum ble_device_addr addr_type,
+	int (*enable)(struct ble *self, enum ble_device_addr addr_type,
 			uint8_t addr[BLE_ADDR_LEN]);
-	int (*disable)(struct ble *iface);
-	enum ble_device_addr (*get_device_address)(struct ble *iface,
+	int (*disable)(struct ble *self);
+	enum ble_device_addr (*get_device_address)(struct ble *self,
 			uint8_t addr[BLE_ADDR_LEN]);
 
-	void (*register_gap_event_callback)(struct ble *iface,
+	void (*register_gap_event_callback)(struct ble *self,
 			ble_event_callback_t cb);
-	void (*register_gatt_event_callback)(struct ble *iface,
+	void (*register_gatt_event_callback)(struct ble *self,
 			ble_event_callback_t cb);
 
-	int (*adv_init)(struct ble *iface, enum ble_adv_mode mode);
-	int (*adv_set_interval)(struct ble *iface,
+	int (*adv_init)(struct ble *self, enum ble_adv_mode mode);
+	int (*adv_set_interval)(struct ble *self,
 			uint16_t min_ms, uint16_t max_ms);
-	int (*adv_set_duration)(struct ble *iface, uint32_t msec);
-	int (*adv_set_payload)(struct ble *iface,
+	int (*adv_set_duration)(struct ble *self, uint32_t msec);
+	int (*adv_set_payload)(struct ble *self,
 			const struct ble_adv_payload *payload);
-	int (*adv_set_scan_response)(struct ble *iface,
+	int (*adv_set_scan_response)(struct ble *self,
 			const struct ble_adv_payload *payload);
-	int (*adv_start)(struct ble *iface);
-	int (*adv_stop)(struct ble *iface);
+	int (*adv_start)(struct ble *self);
+	int (*adv_stop)(struct ble *self);
 
 	struct ble_gatt_service *(*gatt_create_service)(void *mem, uint16_t memsize,
 			const uint8_t *uuid, uint8_t uuid_len,
@@ -126,7 +126,7 @@ struct ble_api {
 	int (*gatt_register_service)(struct ble_gatt_service *svc);
 	int (*gatt_response)(struct ble_handler_context *ctx,
 			const void *data, uint16_t datasize);
-	int (*gatt_notify)(struct ble *iface, const void *attr_handle,
+	int (*gatt_notify)(struct ble *self, const void *attr_handle,
 			const void *data, uint16_t datasize);
 };
 
