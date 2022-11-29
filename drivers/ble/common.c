@@ -24,3 +24,11 @@ int ble_adv_payload_add(struct ble_adv_payload *buf, uint8_t type,
 
 	return 0;
 }
+
+#include "libmcu/compiler.h"
+
+LIBMCU_WEAK
+struct ble *ble_create_default(void)
+{
+	return NULL;
+}

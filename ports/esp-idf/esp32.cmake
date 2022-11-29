@@ -43,7 +43,6 @@ add_executable(${PROJECT_EXECUTABLE}
 	${LIBMCU_ROOT}/ports/freertos/semaphore.c
 	${CMAKE_SOURCE_DIR}/drivers/wifi/esp32.c
 	${CMAKE_SOURCE_DIR}/drivers/ble/esp32.c
-	${CMAKE_SOURCE_DIR}/drivers/ble/common.c
 	${CMAKE_SOURCE_DIR}/ports/coreMQTT/mqtt.c
 )
 
