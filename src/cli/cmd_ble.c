@@ -39,7 +39,7 @@ static void process_adv(struct ble *ble, int argc, const char *argv[],
 	} else if (strcmp("name", argv[2]) == 0 && argc == 4) {
 		struct ble_adv_payload adv;
 		ble_adv_payload_init(&adv);
-		ble_adv_payload_add(&adv, 0x09, argv[3], strlen(argv[3]));
+		ble_adv_payload_add(&adv, 0x09, argv[3], (uint8_t)strlen(argv[3]));
 		ble_adv_set_payload(ble, &adv);
 	} else if (strcmp("itvl", argv[2]) == 0 && argc == 5) {
 		uint16_t min_ms = (uint16_t)strtol(argv[3], NULL, 10);
