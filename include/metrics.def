@@ -1,8 +1,0 @@
-METRICS_DEFINE(1, HeartbeatInterval)
-METRICS_DEFINE(2, Resets)
-METRICS_DEFINE(3, Assertions)
-METRICS_DEFINE(4, FaultExceptions)
-METRICS_DEFINE(5, OOM)
-METRICS_DEFINE(6, CPULoad)
-METRICS_DEFINE(7, HeapLowWatermark)
-METRICS_DEFINE(8, StackHighWatermark)
