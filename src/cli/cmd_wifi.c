@@ -10,7 +10,7 @@
 #include <string.h>
 #include <semaphore.h>
 
-#include "net/wifi.h"
+#include "pwifi/wifi.h"
 
 #include "libmcu/hexdump.h"
 #include "libmcu/compiler.h"
