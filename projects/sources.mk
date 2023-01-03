@@ -11,11 +11,9 @@ APP_SRCS = $(foreach dir, $(addprefix $(BASEDIR)/, $(app-src-dirs)), \
 SRCS += \
 	$(APP_SRCS) \
 	$(LIBMCU_MODULES_SRCS) \
-	$(BASEDIR)/drivers/ble/common.c \
 
 INCS += \
 	$(BASEDIR)/include \
-	$(BASEDIR)/drivers/include \
 	$(LIBMCU_MODULES_INCS) \
 
 DEFS += \

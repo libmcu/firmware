@@ -14,7 +14,6 @@ endforeach()
 set(APP_SRCS
 	${FPL_SRCS}
 	${LIBMCU_MODULES_SRCS}
-	${BASEDIR}/drivers/ble/common.c
 )
 
 set(APP_INCS
