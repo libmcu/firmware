@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "cli.h"
+#include "libmcu/cli.h"
 #include <string.h>
 #include <stdlib.h>
 #include "pble/ble.h"
@@ -48,8 +48,7 @@ static void process_adv(struct ble *ble, int argc, const char *argv[],
 	}
 }
 
-cli_cmd_error_t cli_cmd_ble(int argc, const char *argv[], const void *env)
-{
+DEFINE_CLI_CMD(ble, "BLE functions") {
 	static struct ble *ble;
 	struct cli const *cli = (struct cli const *)env;
 

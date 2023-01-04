@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "cli.h"
+#include "libmcu/cli.h"
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
@@ -73,8 +73,7 @@ static cli_cmd_error_t handle_single_param(const char *argv[],
 	return CLI_CMD_SUCCESS;
 }
 
-cli_cmd_error_t cli_cmd_debug(int argc, const char *argv[], const void *env)
-{
+DEFINE_CLI_CMD(dbg, "Debug functions such as trace") {
 	struct cli const *cli = (struct cli const *)env;
 
 	if (argc == 2) {

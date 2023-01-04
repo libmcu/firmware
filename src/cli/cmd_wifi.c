@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "cli.h"
+#include "libmcu/cli.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -187,8 +187,7 @@ static void handle_multi_params(int argc, const char *argv[], struct wifi *iface
 	}
 }
 
-cli_cmd_error_t cli_cmd_wifi(int argc, const char *argv[], const void *env)
-{
+DEFINE_CLI_CMD(wifi, "WiFi functions") {
 	static struct wifi *iface;
 	struct cli const *cli = (struct cli const *)env;
 
