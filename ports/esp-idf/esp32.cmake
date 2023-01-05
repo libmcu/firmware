@@ -36,6 +36,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 target_link_libraries(pble idf::bt)
 target_link_libraries(pwifi idf::esp_wifi)
 
+set(LIBMCU_ROOT ${PROJECT_SOURCE_DIR}/external/libmcu)
+
 add_executable(${PROJECT_EXECUTABLE}
 	${CMAKE_CURRENT_LIST_DIR}/start.c
 	${CMAKE_CURRENT_LIST_DIR}/board.c

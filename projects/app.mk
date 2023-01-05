@@ -2,6 +2,12 @@
 
 include projects/sources.mk
 
+LIBMCU_ROOT ?= $(BASEDIR)/external/libmcu
+LIBMCU_MODULES := ao button cli logging metrics trace
+include $(LIBMCU_ROOT)/projects/modules.mk
+SRCS += $(LIBMCU_MODULES_SRCS)
+INCS += $(LIBMCU_MODULES_INCS)
+
 PWIFI_ROOT := $(BASEDIR)/external/pwifi
 include $(PWIFI_ROOT)/sources.mk
 SRCS += $(PWIFI_SRCS)
