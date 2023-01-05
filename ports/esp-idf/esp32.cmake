@@ -33,16 +33,8 @@ configure_file("${IDF_PATH}/tools/cmake/project_description.json.in"
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(PBLE_TARGET_PLATFORM esp32)
-add_subdirectory(external/pble)
 target_link_libraries(pble idf::bt)
-
-set(PWIFI_TARGET_PLATFORM esp32)
-add_subdirectory(external/pwifi)
 target_link_libraries(pwifi idf::esp_wifi)
-
-target_link_libraries(fpl_app pble)
-target_link_libraries(fpl_app pwifi)
 
 add_executable(${PROJECT_EXECUTABLE}
 	${CMAKE_CURRENT_LIST_DIR}/start.c
