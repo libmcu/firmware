@@ -11,3 +11,7 @@ PBLE_ROOT := $(BASEDIR)/external/pble
 include $(PBLE_ROOT)/sources.mk
 SRCS += $(PBLE_SRCS)
 INCS += $(PBLE_INCS)
+
+#ifndef NDEBUG
+$(addprefix $(OUTDIR)/, $(SRCS:%=%.o)): CFLAGS+=-finstrument-functions
+#endif

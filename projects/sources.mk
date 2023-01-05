@@ -24,7 +24,3 @@ DEFS += \
 
 OBJS += $(addprefix $(OUTDIR)/, $(SRCS:%=%.o))
 LIBDIRS += $(OUTDIR)
-
-ifndef NDEBUG
-$(addprefix $(OUTDIR)/, $(SRCS:%=%.o)): CFLAGS+=-finstrument-functions
-endif
