@@ -19,8 +19,7 @@ int main(void)
 			board_get_version_string());
 
 	struct cli cli;
-	DEFINE_CLI_CMD_LIST(cli_commands,
-		     exit, help, info, reboot, md, dbg, wifi, mqtt, ble);
+	DEFINE_CLI_CMD_LIST(cli_commands, help, exit, info, reboot, md, dbg);
 	cli_init(&cli, cli_io_create(), cli_commands);
 	cli_run(&cli);
 
