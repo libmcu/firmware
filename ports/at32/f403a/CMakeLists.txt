@@ -33,7 +33,7 @@ set(AT_SRCS
 
 	${CMAKE_CURRENT_SOURCE_DIR}/board.c
 
-	${LIBMCU_ROOT}/ports/stubs/semaphore.c
+	${CMAKE_SOURCE_DIR}/external/libmcu/ports/stubs/semaphore.c
 )
 set(AT_INCS
 	${SDK_ROOT}/cmsis/cm4/core_support

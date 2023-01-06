@@ -74,7 +74,7 @@ set(NRF_SRCS
 
 	${CMAKE_CURRENT_SOURCE_DIR}/timext.c
 
-	${LIBMCU_ROOT}/ports/stubs/semaphore.c
+	${CMAKE_SOURCE_DIR}/external/libmcu/ports/stubs/semaphore.c
 )
 set(NRF_INCS
 	${SDK_ROOT}/components/softdevice/s132/headers/nrf52
