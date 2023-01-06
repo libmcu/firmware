@@ -49,14 +49,16 @@ target_link_libraries(pl4 idf::esp-tls)
 set(LIBMCU_ROOT ${PROJECT_SOURCE_DIR}/external/libmcu)
 
 add_executable(${PROJECT_EXECUTABLE}
+	${LIBMCU_ROOT}/ports/freertos/semaphore.c
+	${LIBMCU_ROOT}/ports/esp-idf/board.c
+	${LIBMCU_ROOT}/ports/esp-idf/ao.c
+
 	${CMAKE_CURRENT_LIST_DIR}/start.c
 	${CMAKE_CURRENT_LIST_DIR}/board.c
 	${CMAKE_CURRENT_LIST_DIR}/uart0.c
 	${CMAKE_CURRENT_LIST_DIR}/usb_serial_jtag.c
 	${CMAKE_CURRENT_LIST_DIR}/cli.c
 	${CMAKE_CURRENT_LIST_DIR}/i2c0.c
-	${LIBMCU_ROOT}/ports/freertos/semaphore.c
-	${LIBMCU_ROOT}/ports/esp-idf/board.c
 )
 
 set(mapfile "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.map")
