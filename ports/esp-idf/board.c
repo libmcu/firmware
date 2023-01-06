@@ -10,8 +10,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "timers.h"
 #include "libmcu/ao_timer.h"
+#include "esp_timer.h"
 
 static void wake_ao_timer(void *arg)
 {
@@ -32,9 +32,13 @@ static void wake_ao_timer(void *arg)
 static void initialize_ao(void)
 {
 	ao_timer_reset();
-	xTimerHandle aoTimer = xTimerCreate("aoTimer", pdMS_TO_TICKS(50), true,
-			0, (TimerCallbackFunction_t)wake_ao_timer);
-	xTimerStart(aoTimer, portMAX_DELAY);
+
+	const esp_timer_create_args_t timer_args = {
+		.callback = &wake_ao_timer,
+	};
+	esp_timer_handle_t ao_timer;
+	esp_timer_create(&timer_args, &ao_timer);
+	esp_timer_start_periodic(ao_timer, 50000);
 }
 
 void board_reboot(void)
