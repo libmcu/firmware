@@ -18,8 +18,4 @@ include $(PBLE_ROOT)/sources.mk
 SRCS += $(PBLE_SRCS)
 INCS += $(PBLE_INCS)
 
-#ifndef NDEBUG
-$(addprefix $(OUTDIR)/, $(SRCS:%=%.o)): CFLAGS+=-finstrument-functions
-#endif
-
 DEFS += METRICS_USER_DEFINES=\"$(BASEDIR)/include/metrics.def\"
