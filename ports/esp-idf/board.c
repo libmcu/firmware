@@ -12,6 +12,7 @@
 
 #include "libmcu/ao_timer.h"
 #include "esp_timer.h"
+#include "driver/gpio.h"
 
 static void wake_ao_timer(void *arg)
 {
@@ -48,5 +49,7 @@ void board_reboot(void)
 
 void board_init(void)
 {
+	gpio_install_isr_service(0);
+
 	initialize_ao();
 }

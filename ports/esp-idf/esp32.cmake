@@ -52,6 +52,7 @@ add_executable(${PROJECT_EXECUTABLE}
 	${LIBMCU_ROOT}/ports/freertos/semaphore.c
 	${LIBMCU_ROOT}/ports/esp-idf/board.c
 	${LIBMCU_ROOT}/ports/esp-idf/ao.c
+	${LIBMCU_ROOT}/ports/overrides/button.c
 
 	${CMAKE_CURRENT_LIST_DIR}/start.c
 	${CMAKE_CURRENT_LIST_DIR}/board.c
@@ -60,6 +61,7 @@ add_executable(${PROJECT_EXECUTABLE}
 	${CMAKE_CURRENT_LIST_DIR}/cli.c
 	${CMAKE_CURRENT_LIST_DIR}/i2c0.c
 	${CMAKE_CURRENT_LIST_DIR}/status_led.c
+	${CMAKE_CURRENT_LIST_DIR}/user_button.c
 )
 
 set(mapfile "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.map")

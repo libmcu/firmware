@@ -10,13 +10,15 @@
 #include "libmcu/ao.h"
 
 #include "status_led.h"
+#include "user_button.h"
 
-#define EVENTLOOP_STACK_SIZE_BYTES	2048
+#define EVENTLOOP_STACK_SIZE_BYTES	4096
 
 #define STATUS_LED_BLINK_INTERVAL_MS	500
 
 enum event {
 	EVT_LED,
+	EVT_BUTTON,
 };
 
 struct ao_event {
@@ -25,6 +27,7 @@ struct ao_event {
 
 static struct ao eventloop;
 static struct ao_event evt_led = { .type = EVT_LED };
+static struct ao_event evt_button = { .type = EVT_BUTTON };
 
 static void dispatch(struct ao * const ao, const struct ao_event * const event)
 {
@@ -33,6 +36,10 @@ static void dispatch(struct ao * const ao, const struct ao_event * const event)
 		status_led_toggle();
 		ao_post_defer(ao, &evt_led, STATUS_LED_BLINK_INTERVAL_MS);
 		break;
+	case EVT_BUTTON:
+		if (user_button_process()) {
+			ao_post_if_unique(ao, &evt_button);
+		}
 	default:
 		break;
 	}
@@ -42,6 +49,11 @@ static void eventloop_init(void)
 {
 	ao_create(&eventloop, EVENTLOOP_STACK_SIZE_BYTES, 0);
 	ao_start(&eventloop, dispatch);
+}
+
+static void on_user_button_state_change(void)
+{
+	ao_post_if_unique(&eventloop, &evt_button);
 }
 
 static void shell_start(void)
@@ -69,8 +81,9 @@ int main(void)
 
 	board_init();
 
-	status_led_init();
 	eventloop_init();
+	status_led_init();
+	user_button_init(on_user_button_state_change);
 
 	info("\n\n[%s] %s %s",
 			board_get_reboot_reason_string(),
