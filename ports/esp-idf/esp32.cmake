@@ -62,6 +62,7 @@ add_executable(${PROJECT_EXECUTABLE}
 	${CMAKE_CURRENT_LIST_DIR}/i2c0.c
 	${CMAKE_CURRENT_LIST_DIR}/status_led.c
 	${CMAKE_CURRENT_LIST_DIR}/user_button.c
+	${CMAKE_CURRENT_LIST_DIR}/bq25180.c
 )
 
 set(mapfile "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.map")

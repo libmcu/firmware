@@ -61,7 +61,7 @@ static void shell_start(void)
 	struct cli cli;
 
 	DEFINE_CLI_CMD_LIST(cli_commands,
-			help, exit, info, reboot, md, wifi, ble, mqtt);
+			help, exit, info, reboot, md, wifi, ble, mqtt, test);
 
 	cli_init(&cli, cli_io_create(), cli_commands);
 	cli_run(&cli);
