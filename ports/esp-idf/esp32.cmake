@@ -16,6 +16,7 @@ idf_build_process(${BOARD}
 		esptool_py
 		esp-tls
 		bt
+		esp_adc_cal
 	SDKCONFIG_DEFAULTS
 		"${CMAKE_CURRENT_LIST_DIR}/sdkconfig.defaults"
 	BUILD_DIR
@@ -63,6 +64,8 @@ add_executable(${PROJECT_EXECUTABLE}
 	${CMAKE_CURRENT_LIST_DIR}/status_led.c
 	${CMAKE_CURRENT_LIST_DIR}/user_button.c
 	${CMAKE_CURRENT_LIST_DIR}/bq25180.c
+	${CMAKE_CURRENT_LIST_DIR}/battery.c
+	${CMAKE_CURRENT_LIST_DIR}/adc1.c
 )
 
 set(mapfile "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.map")
@@ -80,6 +83,7 @@ target_link_libraries(${PROJECT_EXECUTABLE}
 	idf::freertos
 	idf::spi_flash
 	idf::nvs_flash
+	idf::esp_adc_cal
 	fpl_app
 	-Wl,--cref
 	-Wl,--Map=\"${mapfile}\"

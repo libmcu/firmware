@@ -10,15 +10,16 @@
 #include "libmcu/ao.h"
 
 #include "status_led.h"
+#include "battery.h"
 #include "user_button.h"
 
 #define EVENTLOOP_STACK_SIZE_BYTES	4096
-
 #define STATUS_LED_BLINK_INTERVAL_MS	500
 
 enum event {
 	EVT_LED,
 	EVT_BUTTON,
+	EVT_BATTERY,
 };
 
 struct ao_event {
@@ -28,6 +29,7 @@ struct ao_event {
 static struct ao eventloop;
 static struct ao_event evt_led = { .type = EVT_LED };
 static struct ao_event evt_button = { .type = EVT_BUTTON };
+static struct ao_event evt_battery = { .type = EVT_BATTERY };
 
 static void dispatch(struct ao * const ao, const struct ao_event * const event)
 {
@@ -40,6 +42,11 @@ static void dispatch(struct ao * const ao, const struct ao_event * const event)
 		if (user_button_process()) {
 			ao_post_if_unique(ao, &evt_button);
 		}
+		break;
+	case EVT_BATTERY:
+		/* TODO: print battery status */
+		info("BAT INT!!\n");
+		break;
 	default:
 		break;
 	}
@@ -54,6 +61,11 @@ static void eventloop_init(void)
 static void on_user_button_state_change(void)
 {
 	ao_post_if_unique(&eventloop, &evt_button);
+}
+
+static void on_battery_status_change(void)
+{
+	ao_post(&eventloop, &evt_battery);
 }
 
 static void shell_start(void)
@@ -83,6 +95,7 @@ int main(void)
 
 	eventloop_init();
 	status_led_init();
+	battery_init(on_battery_status_change);
 	user_button_init(on_user_button_state_change);
 
 	info("\n\n[%s] %s %s",
