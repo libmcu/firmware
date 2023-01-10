@@ -14,6 +14,7 @@ extern "C" {
 #include "padc/adc.h"
 
 struct adc *adc1_create(void);
+int adc1_channel_init(int channel, int attenuation);
 
 #if defined(__cplusplus)
 }

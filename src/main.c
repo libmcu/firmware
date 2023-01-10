@@ -44,8 +44,6 @@ static void dispatch(struct ao * const ao, const struct ao_event * const event)
 		}
 		break;
 	case EVT_BATTERY:
-		/* TODO: print battery status */
-		info("BAT INT!!\n");
 		break;
 	default:
 		break;

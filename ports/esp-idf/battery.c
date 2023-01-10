@@ -7,6 +7,7 @@
 #include "battery.h"
 #include "adc1.h"
 #include "driver/gpio.h"
+#include "bq25180.h"
 
 #define MONITOR_ENABLE_GPIO_NUMBER		4
 #define MONITOR_GPIO_NUMBER			7 /* ADC1_6 */
@@ -41,29 +42,73 @@ static void initialize_monitor_gpio(void)
 	gpio_isr_handler_add(MONITOR_INTR_GPIO_NUMBER, on_interrupt, 0);
 }
 
+static int calc_average(const int *samples, int n)
+{
+	int sum = 0;
+
+	for (int i = 0; i < n; i++) {
+		sum += samples[i];
+	}
+
+	return sum / n;
+}
+
+static int calc_variance(const int *samples, int n, int avg)
+{
+	int sum = 0;
+
+	for (int i = 0; i < n; i++) {
+		int diff = samples[i] - avg;
+		sum += diff * diff;
+	}
+
+	return sum / n;
+}
+
+static int calc_average_filtered(const int *samples, int n, int avg, int var)
+{
+	int c = 0;
+	int sum = 0;
+
+	for (int i = 0; i < n; i++) {
+		int diff = samples[i] - avg;
+
+		if ((diff * diff) > var) {
+			continue;
+		}
+
+		sum += samples[i];
+		c++;
+	}
+
+	return sum / c;
+}
+
 int battery_enable_monitor(bool enable)
 {
 	gpio_set_level(MONITOR_ENABLE_GPIO_NUMBER, enable);
 	return 0;
 }
 
-int battery_level_raw(int nr_sampling)
+int battery_level_raw(void)
 {
-	if (!adc || nr_sampling < 0) {
+	if (!adc) {
 		return 0;
 	}
 
-	int sum = 0;
+#define NR_SAMPLES	20
+	int samples[NR_SAMPLES];
 
-	/* FIXME: The ADC returns incorrect values except the first one when
-	 * reading more than once without delay. */
-	adc_get_raw(adc, ADC_CHANNEL); /* first two samples have a little higher values */
-	adc_get_raw(adc, ADC_CHANNEL);
-	for (int i = 0; i < nr_sampling; i++) {
-		sum += adc_get_raw(adc, ADC_CHANNEL);
+	adc_get_raw(adc, ADC_CHANNEL); /* The first one always to be outlier. */
+	for (int i = 0; i < NR_SAMPLES; i++) {
+		samples[i] = adc_get_raw(adc, ADC_CHANNEL);
 	}
 
-	return sum / nr_sampling;
+	int avg = calc_average(samples, NR_SAMPLES);
+	int var = calc_variance(samples, NR_SAMPLES, avg);
+	avg = calc_average_filtered(samples, NR_SAMPLES, avg, var);
+
+	return avg;
 }
 
 int battery_raw_to_millivolts(int raw)
@@ -72,18 +117,22 @@ int battery_raw_to_millivolts(int raw)
 		return 0;
 	}
 
-	return adc_raw_to_millivolts(adc, raw);
+	int mv_raw = adc_raw_to_millivolts(adc, raw);
+	return mv_raw * 1000/128/*scale*/ - 54/*offset*/;
 }
 
 int battery_init(void (*on_event_callback)(void))
 {
 	adc = adc1_create();
+	adc1_channel_init(6, 0/*dB*/);
 	adc_enable(adc, true);
 	adc_calibrate(adc);
 
 	initialize_monitor_gpio();
 
 	dispatch_callback = on_event_callback;
+
+	bq25180_enable_interrupt(BQ25180_INTR_CHARGING_STATUS);
 
 	return 0;
 }

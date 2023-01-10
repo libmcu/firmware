@@ -53,8 +53,6 @@ static int enable(struct adc *self, bool enable)
 	 * 150mV ~ 2450mV : 11dB */
 	if (enable) {
 		initialize_adc1();
-		initialize_channel(ADC1_CHANNEL_6, ADC_ATTEN_DB_0);
-
 		return 0;
 	}
 
@@ -79,6 +77,11 @@ static int calibrate(struct adc *self)
 {
 	(void)self;
 	return calibrate_internal(ADC_ATTEN_DB_0);
+}
+
+int adc1_channel_init(int channel, int attenuation)
+{
+	initialize_channel(channel, attenuation);
 }
 
 struct adc *adc1_create(void)

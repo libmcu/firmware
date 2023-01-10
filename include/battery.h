@@ -15,10 +15,41 @@ extern "C" {
 #include <stdbool.h>
 
 int battery_init(void (*on_event_callback)(void));
+
+/**
+ * @brief Enable or Disable battery level monitor
+ *
+ * @param[in] enable enabled if true, or disabled
+ *
+ * @note Baterry level monitor should be enabled first before using
+ *       @ref battery_level and @ref battery_level_raw
+ *
+ * @return 0 on success or negative error code
+ */
 int battery_enable_monitor(bool enable);
-int battery_level_raw(int nr_sampling);
+
+/**
+ * @brief Read ADC value on battery
+ *
+ * @return ADC value
+ */
+int battery_level_raw(void);
+
+/**
+ * @brief Convert ADC value to millivoltage
+ *
+ * @param[in] raw ADC value
+ *
+ * @return millivoltage
+ */
 int battery_raw_to_millivolts(int raw);
-uint8_t battery_check_level(void);
+
+/**
+ * @brief Read battery level in percentage
+ *
+ * @return 0 ~ 100 percentage
+ */
+uint8_t battery_level(void);
 
 #if defined(__cplusplus)
 }

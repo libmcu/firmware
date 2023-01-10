@@ -73,9 +73,9 @@ static cli_cmd_error_t do_battery(int argc, const char *argv[],
 	if (argc == 3 && strcmp(argv[2], "init") == 0) {
 		battery_enable_monitor(true);
 	} else if (argc == 3 && strcmp(argv[2], "level") == 0) {
-		int adc = battery_level_raw(10);
-		print_result(io, "%s read %dmV (ADC %d)",
-				adc, battery_raw_to_millivolts(adc), 0);
+		int adc = battery_level_raw();
+		print_result(io, "%s read %dmV %d",
+				0, battery_raw_to_millivolts(adc), 0);
 	} else {
 		println(io, "usage: <init|level>");
 	}
