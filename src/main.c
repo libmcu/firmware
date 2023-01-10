@@ -31,6 +31,8 @@ static struct ao_event evt_led = { .type = EVT_LED };
 static struct ao_event evt_button = { .type = EVT_BUTTON };
 static struct ao_event evt_battery = { .type = EVT_BATTERY };
 
+static size_t (*stdout)(const void *, size_t);
+
 static void dispatch(struct ao * const ao, const struct ao_event * const event)
 {
 	switch (event->type) {
@@ -77,17 +79,31 @@ static void shell_start(void)
 	cli_run(&cli);
 }
 
-static void logging_backend_init(size_t (*writer)(const void *, size_t))
+static size_t logging_stdout_writer(const void *data, size_t size)
+{
+	static char buf[LOGGING_MESSAGE_MAXLEN];
+	size_t len = logging_stringify(buf, sizeof(buf), data);
+
+	buf[len++] = '\n';
+	buf[len] = '\0';
+
+	(*stdout)(buf, len);
+
+	return len;
+}
+
+static void logging_stdout_backend_init(void)
 {
 	static struct logging_backend log_console = { 0, };
-	log_console.write = writer;
+	log_console.write = logging_stdout_writer;
 	logging_add_backend(&log_console);
 }
 
 int main(void)
 {
 	logging_init();
-	logging_backend_init(cli_io_create()->write);
+	logging_stdout_backend_init();
+	stdout = cli_io_create()->write;
 
 	board_init();
 
