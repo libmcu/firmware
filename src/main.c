@@ -96,8 +96,7 @@ int main(void)
 	battery_init(on_battery_status_change);
 	user_button_init(on_user_button_state_change);
 
-	info("\n\n[%s] %s %s",
-			board_get_reboot_reason_string(),
+	info("[%s] %s %s", board_get_reboot_reason_string(),
 			board_get_serial_number_string(),
 			board_get_version_string());
 
