@@ -6,6 +6,7 @@
 
 #include "user_button.h"
 #include "driver/gpio.h"
+#include "esp_attr.h"
 
 #define USER_BUTTON_GPIO_NUMBER		0
 

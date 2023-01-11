@@ -7,6 +7,7 @@
 #include "battery.h"
 #include "adc1.h"
 #include "driver/gpio.h"
+#include "esp_attr.h"
 #include "bq25180.h"
 
 #define MONITOR_ENABLE_GPIO_NUMBER		4
@@ -124,9 +125,9 @@ int battery_raw_to_millivolts(int raw)
 int battery_init(void (*on_event_callback)(void))
 {
 	adc = adc1_create();
-	adc1_channel_init(6, 0/*dB*/);
 	adc_enable(adc, true);
 	adc_calibrate(adc);
+	adc1_channel_init(6, 0/*dB*/);
 
 	initialize_monitor_gpio();
 
