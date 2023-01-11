@@ -4,10 +4,25 @@
 include($ENV{IDF_PATH}/tools/cmake/idf.cmake)
 
 set(ESP_COMPONENTS freertos esptool_py esp-tls bt)
+set(PORT_SRCS
+	${CMAKE_CURRENT_LIST_DIR}/start.c
+	${CMAKE_CURRENT_LIST_DIR}/board.c
+	${CMAKE_CURRENT_LIST_DIR}/uart0.c
+	${CMAKE_CURRENT_LIST_DIR}/usb_serial_jtag.c
+	${CMAKE_CURRENT_LIST_DIR}/cli.c
+	${CMAKE_CURRENT_LIST_DIR}/i2c0.c
+	${CMAKE_CURRENT_LIST_DIR}/status_led.c
+	${CMAKE_CURRENT_LIST_DIR}/user_button.c
+	${CMAKE_CURRENT_LIST_DIR}/bq25180.c
+	${CMAKE_CURRENT_LIST_DIR}/battery.c
+)
+
 if ($ENV{IDF_VERSION} VERSION_GREATER_EQUAL "5.0.0")
 	list(APPEND ESP_COMPONENTS esp_adc)
+	list(APPEND PORT_SRCS ${CMAKE_CURRENT_LIST_DIR}/adc1.c)
 else()
 	list(APPEND ESP_COMPONENTS esp_adc_cal)
+	list(APPEND PORT_SRCS ${CMAKE_CURRENT_LIST_DIR}/adc1_legacy.c)
 endif()
 
 idf_build_process(${BOARD}
@@ -52,22 +67,12 @@ target_link_libraries(pl4 idf::esp-tls)
 set(LIBMCU_ROOT ${PROJECT_SOURCE_DIR}/external/libmcu)
 
 add_executable(${PROJECT_EXECUTABLE}
+	${PORT_SRCS}
+
 	${LIBMCU_ROOT}/ports/freertos/semaphore.c
 	${LIBMCU_ROOT}/ports/esp-idf/board.c
 	${LIBMCU_ROOT}/ports/esp-idf/ao.c
 	${LIBMCU_ROOT}/ports/overrides/button.c
-
-	${CMAKE_CURRENT_LIST_DIR}/start.c
-	${CMAKE_CURRENT_LIST_DIR}/board.c
-	${CMAKE_CURRENT_LIST_DIR}/uart0.c
-	${CMAKE_CURRENT_LIST_DIR}/usb_serial_jtag.c
-	${CMAKE_CURRENT_LIST_DIR}/cli.c
-	${CMAKE_CURRENT_LIST_DIR}/i2c0.c
-	${CMAKE_CURRENT_LIST_DIR}/status_led.c
-	${CMAKE_CURRENT_LIST_DIR}/user_button.c
-	${CMAKE_CURRENT_LIST_DIR}/bq25180.c
-	${CMAKE_CURRENT_LIST_DIR}/battery.c
-	${CMAKE_CURRENT_LIST_DIR}/adc1.c
 )
 
 set(mapfile "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.map")
