@@ -46,6 +46,7 @@ static void dispatch(struct ao * const ao, const struct ao_event * const event)
 		}
 		break;
 	case EVT_BATTERY:
+		debug("Battery status changed");
 		break;
 	default:
 		break;

@@ -133,6 +133,8 @@ int battery_init(void (*on_event_callback)(void))
 	dispatch_callback = on_event_callback;
 
 	bq25180_enable_interrupt(BQ25180_INTR_CHARGING_STATUS);
+	bq25180_set_watchdog_timer(BQ25180_WDT_DISABLE);
+	bq25180_enable_thermal_protection(false);
 
 	return 0;
 }
