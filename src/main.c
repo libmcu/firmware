@@ -71,12 +71,14 @@ static void on_battery_status_change(void)
 
 static void shell_start(void)
 {
+	static char cli_buffer[1024];
 	struct cli cli;
 
 	DEFINE_CLI_CMD_LIST(cli_commands,
 			help, exit, info, reboot, md, wifi, ble, mqtt, test);
 
-	cli_init(&cli, cli_io_create(), cli_commands);
+	cli_init(&cli, cli_io_create(), cli_buffer, sizeof(cli_buffer));
+	cli_register_cmdlist(&cli, cli_commands);
 	cli_run(&cli);
 }
 
