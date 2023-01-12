@@ -122,4 +122,6 @@ int main(void)
 	ao_post_defer(&eventloop, &evt_led, STATUS_LED_BLINK_INTERVAL_MS);
 
 	shell_start();
+
+	return 0;
 }
