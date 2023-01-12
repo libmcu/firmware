@@ -68,7 +68,6 @@ set(LIBMCU_ROOT ${PROJECT_SOURCE_DIR}/external/libmcu)
 
 add_executable(${PROJECT_EXECUTABLE}
 	${PORT_SRCS}
-
 	${LIBMCU_ROOT}/ports/freertos/semaphore.c
 	${LIBMCU_ROOT}/ports/esp-idf/board.c
 	${LIBMCU_ROOT}/ports/esp-idf/ao.c
