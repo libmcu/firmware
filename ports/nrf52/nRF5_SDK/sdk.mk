@@ -76,6 +76,7 @@ NRF_SRCS = \
 	$(PORT_ROOT)/nRF5_SDK/timext.c \
 	$(PORT_ROOT)/nRF5_SDK/uart0.c \
 	$(PORT_ROOT)/nRF5_SDK/cli.c \
+	$(PORT_ROOT)/nRF5_SDK/board.c \
 	\
 	$(LIBMCU_ROOT)/ports/stubs/semaphore.c
 
@@ -150,6 +151,7 @@ NRF_DEFS = \
 	_POSIX_C_SOURCE=200809L
 
 $(addprefix $(OUTDIR)/, $(NRF_SRCS:%=%.o)): CFLAGS+=-Wno-error
+$(addprefix $(OUTDIR)/, $(PBLE_SRCS:%=%.o)): CFLAGS+=-Wno-error
 
 INCS += $(NRF_INCS)
 DEFS += $(NRF_DEFS)
