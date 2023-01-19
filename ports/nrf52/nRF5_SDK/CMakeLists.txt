@@ -160,3 +160,5 @@ target_link_libraries(nrf52 libmcu)
 target_link_libraries(${PROJECT_NAME} PRIVATE nrf52)
 target_link_options(${PROJECT_NAME} PRIVATE -T${LD_SCRIPT})
 target_link_directories(${PROJECT_NAME} PRIVATE ${SDK_ROOT}/modules/nrfx/mdk)
+
+target_link_libraries(pble nrf52)
