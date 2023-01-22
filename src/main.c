@@ -15,6 +15,7 @@
 
 #define EVENTLOOP_STACK_SIZE_BYTES	4096
 #define STATUS_LED_BLINK_INTERVAL_MS	500
+#define CLI_MAX_HISTORY			10
 
 enum event {
 	EVT_LED,
@@ -71,7 +72,7 @@ static void on_battery_status_change(void)
 
 static void shell_start(void)
 {
-	static char cli_buffer[1024];
+	static char cli_buffer[CLI_CMD_MAXLEN * CLI_MAX_HISTORY];
 	struct cli cli;
 
 	DEFINE_CLI_CMD_LIST(cli_commands,
