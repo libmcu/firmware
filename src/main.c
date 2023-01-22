@@ -6,6 +6,7 @@
 
 #include "libmcu/board.h"
 #include "libmcu/logging.h"
+#include "libmcu/metrics.h"
 #include "libmcu/cli.h"
 #include "libmcu/ao.h"
 
@@ -76,7 +77,7 @@ static void shell_start(void)
 	struct cli cli;
 
 	DEFINE_CLI_CMD_LIST(cli_commands,
-			help, exit, info, reboot, md, wifi, ble, mqtt, test);
+			help, exit, info, reboot, md, metric, wifi, ble, mqtt, test);
 
 	cli_init(&cli, cli_io_create(), cli_buffer, sizeof(cli_buffer));
 	cli_register_cmdlist(&cli, cli_commands);
@@ -105,10 +106,11 @@ static void logging_stdout_backend_init(void)
 
 int main(void)
 {
-	logging_init();
+	logging_init(board_get_time_since_boot_ms);
 	logging_stdout_backend_init();
 	stdout = cli_io_create()->write;
 
+	metrics_init(0);
 	board_init();
 
 	eventloop_init();
