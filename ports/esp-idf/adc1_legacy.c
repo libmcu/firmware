@@ -6,8 +6,12 @@
 
 #include "adc1.h"
 
+#include <errno.h>
+
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
+
+#include "libmcu/metrics.h"
 
 #define ADC_RESOLUTION			ADC_WIDTH_BIT_12
 
@@ -15,21 +19,32 @@ static esp_adc_cal_characteristics_t adc1_cal;
 
 static int initialize_channel(int channel, int attenuation)
 {
-	adc1_config_channel_atten(channel, attenuation);
+	if (adc1_config_channel_atten(channel, attenuation) != ESP_OK) {
+		metrics_increase(ADCError);
+		return -EFAULT;
+	}
+
 	return 0;
 }
 
 static int initialize_adc1(void)
 {
-	adc1_config_width(ADC_RESOLUTION);
+	if (adc1_config_width(ADC_RESOLUTION) != ESP_OK) {
+		metrics_increase(ADCError);
+		return -EFAULT;
+	}
 
 	return 0;
 }
 
 static int calibrate_internal(int attenuation)
 {
-	esp_adc_cal_characterize(ADC_UNIT_1, attenuation,
-			  ADC_RESOLUTION, 0, &adc1_cal);
+	if (esp_adc_cal_characterize(ADC_UNIT_1, attenuation, ADC_RESOLUTION,
+			0, &adc1_cal) == ESP_ADC_CAL_VAL_NOT_SUPPORTED) {
+		metrics_increase(ADCError);
+		return -EFAULT;
+	}
+
 	return 0;
 }
 

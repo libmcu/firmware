@@ -12,6 +12,8 @@
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 
+#include "libmcu/metrics.h"
+
 #define ADC_RESOLUTION		ADC_BITWIDTH_12
 
 #if defined(esp32s3) || defined(esp32c3)
@@ -37,6 +39,7 @@ static int initialize_adc1(void)
 		return 0;
 	}
 
+	metrics_increase(ADCError);
 	return -EFAULT;
 }
 
@@ -51,6 +54,7 @@ static int initialize_channel(int channel, int attenuation)
 		return 0;
 	}
 
+	metrics_increase(ADCError);
 	return -EFAULT;
 }
 
@@ -67,6 +71,7 @@ static int calibrate_internal(int attenuation)
 		return 0;
 	}
 
+	metrics_increase(ADCError);
 	return -EFAULT;
 }
 
@@ -78,6 +83,7 @@ static int convert_raw_to_millivolts(int raw_adc)
 		return mv;
 	}
 
+	metrics_increase(ADCError);
 	return 0;
 }
 
@@ -89,6 +95,7 @@ static int get_raw_internal(int channel)
 		return adc;
 	}
 
+	metrics_increase(ADCError);
 	return 0;
 }
 
