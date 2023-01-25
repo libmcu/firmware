@@ -62,17 +62,17 @@ set(NRF_SRCS
 	${SDK_ROOT}/components/libraries/fstorage/nrf_fstorage_sd.c
 	${SDK_ROOT}/external/fprintf/nrf_fprintf.c
 	${SDK_ROOT}/external/fprintf/nrf_fprintf_format.c
-	$(SDK_ROOT)/external/freertos/source/croutine.c
-	$(SDK_ROOT)/external/freertos/source/event_groups.c
-	$(SDK_ROOT)/external/freertos/source/portable/MemMang/heap_1.c
-	$(SDK_ROOT)/external/freertos/source/list.c
-	$(SDK_ROOT)/external/freertos/portable/GCC/nrf52/port.c
-	$(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis.c
-	$(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis_systick.c
-	$(SDK_ROOT)/external/freertos/source/queue.c
-	$(SDK_ROOT)/external/freertos/source/stream_buffer.c
-	$(SDK_ROOT)/external/freertos/source/tasks.c
-	$(SDK_ROOT)/external/freertos/source/timers.c
+	${SDK_ROOT}/external/freertos/source/croutine.c
+	${SDK_ROOT}/external/freertos/source/event_groups.c
+	${SDK_ROOT}/external/freertos/source/portable/MemMang/heap_4.c
+	${SDK_ROOT}/external/freertos/source/list.c
+	${SDK_ROOT}/external/freertos/portable/GCC/nrf52/port.c
+	${SDK_ROOT}/external/freertos/portable/CMSIS/nrf52/port_cmsis.c
+	${SDK_ROOT}/external/freertos/portable/CMSIS/nrf52/port_cmsis_systick.c
+	${SDK_ROOT}/external/freertos/source/queue.c
+	${SDK_ROOT}/external/freertos/source/stream_buffer.c
+	${SDK_ROOT}/external/freertos/source/tasks.c
+	${SDK_ROOT}/external/freertos/source/timers.c
 	${SDK_ROOT}/modules/nrfx/soc/nrfx_atomic.c
 	${SDK_ROOT}/modules/nrfx/mdk/system_nrf52.c
 	${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uart.c
@@ -134,9 +134,9 @@ set(NRF_INCS
 	${SDK_ROOT}/components/boards
 	${SDK_ROOT}/components/drivers_nrf/nrf_soc_nosd
 	${SDK_ROOT}/external/fprintf
-	$(SDK_ROOT)/external/freertos/portable/GCC/nrf52
-	$(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52
-	$(SDK_ROOT)/external/freertos/source/include
+	${SDK_ROOT}/external/freertos/portable/GCC/nrf52
+	${SDK_ROOT}/external/freertos/portable/CMSIS/nrf52
+	${SDK_ROOT}/external/freertos/source/include
 	${SDK_ROOT}/integration/nrfx
 	${SDK_ROOT}/integration/nrfx/legacy
 	${SDK_ROOT}/modules/nrfx/mdk
