@@ -6,6 +6,7 @@
 
 #include "libmcu/cli.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "libmcu/compiler.h"
 
@@ -29,8 +30,11 @@ static void print_result(const struct cli_io *io,
 		const char *fmt, int reg, int val, int err)
 {
 	char buf[64];
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 	snprintf(buf, sizeof(buf)-1, fmt,
 			err<0? "Failed:":"Successfully", val, reg);
+#pragma GCC diagnostic pop
 	io->write(buf, strlen(buf));
 	io->write("\n", 1);
 }
@@ -63,7 +67,6 @@ static cli_cmd_error_t do_bq25180(int argc, const char *argv[],
 		println(io, "usage: <read|write> 0xaddr [0xvalue]");
 	}
 
-out:
 	return CLI_CMD_SUCCESS;
 }
 

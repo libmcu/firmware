@@ -8,6 +8,8 @@
 #include "libmcu/assert.h"
 #include "nrf_pwr_mgmt.h"
 #include "app_timer.h"
+#include "nrf_drv_ppi.h"
+#include "nrf_drv_gpiote.h"
 
 void board_init(void)
 {
@@ -17,6 +19,11 @@ void board_init(void)
 	rc = app_timer_init();
 	assert(rc == NRF_SUCCESS);
 	app_timer_resume();
+
+	rc = nrf_drv_ppi_init();
+	assert(rc == NRF_SUCCESS);
+	rc = nrf_drv_gpiote_init();
+	assert(rc == NRF_SUCCESS);
 }
 
 void board_reboot(void)

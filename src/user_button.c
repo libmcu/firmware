@@ -13,10 +13,14 @@ static const void *user_btn_handle;
 
 static void on_pressed(const struct button_data *btn, void *context)
 {
+	unused(btn);
+	unused(context);
 	info("pressed");
 }
 static void on_released(const struct button_data *btn, void *context)
 {
+	unused(btn);
+	unused(context);
 	info("released");
 }
 
