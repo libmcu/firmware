@@ -61,6 +61,7 @@ list(APPEND NRF_SRCS
 	${SDK_ROOT}/components/softdevice/common/nrf_sdh.c
 	${SDK_ROOT}/components/softdevice/common/nrf_sdh_ble.c
 	${SDK_ROOT}/components/softdevice/common/nrf_sdh_soc.c
+	${SDK_ROOT}/components/softdevice/common/nrf_sdh_freertos.c
 	${SDK_ROOT}/components/boards/boards.c
 	${SDK_ROOT}/components/libraries/log/src/nrf_log_frontend.c
 	${SDK_ROOT}/components/libraries/log/src/nrf_log_str_formatter.c
@@ -82,7 +83,7 @@ list(APPEND NRF_SRCS
 	${SDK_ROOT}/components/libraries/sortlist/nrf_sortlist.c
 	${SDK_ROOT}/components/libraries/timer/drv_rtc.c
 	${SDK_ROOT}/components/libraries/scheduler/app_scheduler.c
-	${SDK_ROOT}/components/libraries/timer/app_timer2.c
+	${SDK_ROOT}/components/libraries/timer/app_timer_freertos.c
 	${SDK_ROOT}/components/libraries/experimental_section_vars/nrf_section_iter.c
 	${SDK_ROOT}/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c
 	${SDK_ROOT}/components/libraries/fds/fds.c
@@ -91,6 +92,17 @@ list(APPEND NRF_SRCS
 	${SDK_ROOT}/components/libraries/fstorage/nrf_fstorage_sd.c
 	${SDK_ROOT}/external/fprintf/nrf_fprintf.c
 	${SDK_ROOT}/external/fprintf/nrf_fprintf_format.c
+	${SDK_ROOT}/external/freertos/source/croutine.c
+	${SDK_ROOT}/external/freertos/source/event_groups.c
+	${SDK_ROOT}/external/freertos/source/portable/MemMang/heap_4.c
+	${SDK_ROOT}/external/freertos/source/list.c
+	${SDK_ROOT}/external/freertos/portable/GCC/nrf52/port.c
+	${SDK_ROOT}/external/freertos/portable/CMSIS/nrf52/port_cmsis.c
+	${SDK_ROOT}/external/freertos/portable/CMSIS/nrf52/port_cmsis_systick.c
+	${SDK_ROOT}/external/freertos/source/queue.c
+	${SDK_ROOT}/external/freertos/source/stream_buffer.c
+	${SDK_ROOT}/external/freertos/source/tasks.c
+	${SDK_ROOT}/external/freertos/source/timers.c
 	${SDK_ROOT}/modules/nrfx/soc/nrfx_atomic.c
 	${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uart.c
 	${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c
@@ -120,6 +132,7 @@ list(APPEND NRF_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/adc.c
 	${CMAKE_CURRENT_SOURCE_DIR}/battery.c
 
+	${CMAKE_SOURCE_DIR}/external/libmcu/ports/freertos/board.c
 	${CMAKE_SOURCE_DIR}/external/libmcu/ports/stubs/semaphore.c
 )
 list(APPEND NRF_INCS
@@ -160,6 +173,9 @@ list(APPEND NRF_INCS
 	${SDK_ROOT}/components/boards
 	${SDK_ROOT}/components/drivers_nrf/nrf_soc_nosd
 	${SDK_ROOT}/external/fprintf
+	${SDK_ROOT}/external/freertos/portable/GCC/nrf52
+	${SDK_ROOT}/external/freertos/portable/CMSIS/nrf52
+	${SDK_ROOT}/external/freertos/source/include
 	${SDK_ROOT}/integration/nrfx
 	${SDK_ROOT}/integration/nrfx/legacy
 	${SDK_ROOT}/modules/nrfx/mdk
@@ -185,12 +201,14 @@ list(APPEND NRF_DEFS
 	FLOAT_ABI_HARD
 	NRF52_PAN_74
 	NRF52
+	FREERTOS
 	__HEAP_SIZE=8192
 	__STACK_SIZE=8192
-	APP_TIMER_V2
-	APP_TIMER_V2_RTC1_ENABLED
 	_POSIX_C_SOURCE=200809L
 )
+
+target_include_directories(libmcu PUBLIC
+	${CMAKE_SOURCE_DIR}/external/libmcu/modules/common/include/libmcu/posix)
 
 add_library(nrf52 OBJECT ${NRF_SRCS})
 target_include_directories(nrf52 PRIVATE ${APP_INCS} PUBLIC ${NRF_INCS})
