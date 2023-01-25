@@ -170,7 +170,7 @@ NRF_DEFS = \
 $(addprefix $(OUTDIR)/, $(NRF_SRCS:%=%.o)): CFLAGS+=-Wno-error
 $(addprefix $(OUTDIR)/, $(PBLE_SRCS:%=%.o)): CFLAGS+=-Wno-error
 
-INCS += $(NRF_INCS)
+INCS += $(NRF_INCS) $(LIBMCU_ROOT)/modules/common/include/libmcu/posix
 DEFS += $(NRF_DEFS)
 LIBDIRS += $(SDK_ROOT)/modules/nrfx/mdk
 

@@ -170,6 +170,9 @@ set(NRF_DEFS
 	_POSIX_C_SOURCE=200809L
 )
 
+target_include_directories(libmcu PUBLIC
+	${CMAKE_SOURCE_DIR}/external/libmcu/modules/common/include/libmcu/posix)
+
 add_library(nrf52 OBJECT ${NRF_SRCS})
 target_include_directories(nrf52 PRIVATE ${APP_INCS} PUBLIC ${NRF_INCS})
 target_compile_definitions(nrf52 PUBLIC ${NRF_DEFS})
