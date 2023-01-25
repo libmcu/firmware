@@ -133,6 +133,7 @@ list(APPEND NRF_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/battery.c
 
 	${CMAKE_SOURCE_DIR}/external/libmcu/ports/freertos/board.c
+	${CMAKE_SOURCE_DIR}/external/libmcu/ports/freertos/pthread.c
 	${CMAKE_SOURCE_DIR}/external/libmcu/ports/stubs/semaphore.c
 )
 list(APPEND NRF_INCS

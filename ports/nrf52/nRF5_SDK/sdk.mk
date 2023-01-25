@@ -127,6 +127,7 @@ NRF_SRCS += \
 	$(PORT_ROOT)/nRF5_SDK/battery.c \
 	\
 	$(LIBMCU_ROOT)/ports/freertos/board.c \
+	$(LIBMCU_ROOT)/ports/freertos/pthread.c \
 	$(LIBMCU_ROOT)/ports/stubs/semaphore.c
 
 NRF_INCS += \
