@@ -32,3 +32,4 @@ INCS += $(LIBMCU_MODULES_INCS) \
 	$(BQ25180_INCS) \
 
 DEFS += METRICS_USER_DEFINES=\"$(BASEDIR)/include/metrics.def\"
+CFLAGS += -include libmcu/assert.h

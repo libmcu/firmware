@@ -108,8 +108,7 @@ static int enable(struct adc *self, bool enable)
 	 * 150mV ~ 1750mV : 6dB
 	 * 150mV ~ 2450mV : 11dB */
 	if (enable) {
-		initialize_adc1();
-		return 0;
+		return initialize_adc1();
 	}
 
 	/* disable */
