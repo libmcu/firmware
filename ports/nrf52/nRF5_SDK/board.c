@@ -15,6 +15,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "nrf_sdh_freertos.h"
+#include "FreeRTOS.h"
+#include "task.h"
+
 void board_init(void)
 {
 	int rc = nrf_pwr_mgmt_init();
