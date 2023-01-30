@@ -37,15 +37,12 @@ elseif (DEFINED ZEPHYR_BASE)
 elseif (DEFINED BOARD)
 	enable_language(C CXX ASM)
 	include(projects/boards/${BOARD}.cmake)
-
-	add_executable(${PROJECT_NAME}
-		${APP_SRCS}
-	)
+	include(${BASEDIR}/projects/app.cmake)
 else()
 	message(FATAL_ERROR "Either of unknown platform or undefined board")
 endif()
 
-include(${BASEDIR}/projects/app.cmake)
+include(${BASEDIR}/projects/external.cmake)
 if (DEFINED PLATFORM_SPECIFIC_CMAKE)
 include(${PLATFORM_SPECIFIC_CMAKE})
 endif()
