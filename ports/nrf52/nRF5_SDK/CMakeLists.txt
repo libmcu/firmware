@@ -220,6 +220,7 @@ target_include_directories(libmcu PUBLIC
 add_library(nrf52 OBJECT ${NRF_SRCS})
 target_include_directories(nrf52 PUBLIC ${NRF_INCS} ${APP_INCS})
 target_compile_definitions(nrf52 PUBLIC ${NRF_DEFS})
+target_link_libraries(nrf52 PUBLIC libmcu)
 
 target_link_libraries(pble PRIVATE nrf52)
 
